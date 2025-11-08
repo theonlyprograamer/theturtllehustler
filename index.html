@@ -3,173 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Local Midnight Clock</title>
-
+  <title>Midnight Countdown</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
-
-    body {
+    * {
       margin: 0;
-      height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #000;
+      color: white;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      background: #000;
-      color: #fff;
-      font-family: 'Orbitron', sans-serif;
+      justify-content: center;
+      height: 100vh;
+      font-family: "Poppins", sans-serif;
       text-align: center;
-      transition: background-color 2s, color 2s;
     }
-
     h1 {
-      font-size: 2.5vw;
-      margin-bottom: 2vh;
-      color: #fff;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
     }
-
     .clock-container {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-      border: 2px solid #fff;
-      border-radius: 20px;
-      width: fit-content;
-    }
-
-    .flip-clock {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-
-    .flip-unit {
-      perspective: 1000px;
+    .time-box {
+      background-color: #111;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 20px 15px;
+      text-align: center;
+      width: 70px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.05);
     }
-
-    .flip-card {
-      position: relative;
-      width: 100px;
-      height: 130px;
-      background: #111;
-      border-radius: 10px;
-      border: 1px solid #fff;
-      overflow: hidden;
-      color: #fff;
-      font-size: 4em;
-      line-height: 130px;
-      transform-style: preserve-3d;
-      transition: transform 0.7s ease;
+    .time-box span {
+      display: block;
+      font-size: 2rem;
+      animation: flip 1s ease-in-out;
     }
-
-    .flip-card.flip {
-      transform: rotateX(-180deg);
+    @keyframes flip {
+      0% { transform: rotateX(0deg); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
     }
-
-    .labels {
-      font-size: 1.2vw;
+    .label {
+      font-size: 0.8rem;
       margin-top: 5px;
-      color: #aaa;
+      opacity: 0.7;
     }
-
-    #currentTime {
-      margin-top: 3vh;
-      font-size: 2vw;
-      color: #fff;
-    }
-
-    #location {
-      font-size: 1.2vw;
-      margin-top: 1vh;
-      color: #aaa;
-    }
-
-    @media (max-width: 768px) {
-      h1 { font-size: 6vw; }
-      .flip-card {
-        width: 60px;
-        height: 80px;
-        font-size: 2.2em;
-        line-height: 80px;
-      }
-      .labels { font-size: 3vw; }
-      #currentTime { font-size: 6vw; }
-      #location { font-size: 3.5vw; }
-      .clock-container {
-        padding: 1.5rem;
-        border-width: 1.5px;
-        border-radius: 15px;
-      }
-    }
-
-    .fade {
-      background: #fff !important;
-      color: #000 !important;
+    .current-time {
+      margin-top: 30px;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
     }
   </style>
 </head>
 <body>
+  <h1>Time Left Till Midnight</h1>
   <div class="clock-container">
-    <h1>Time Left Until Midnight</h1>
-
-    <div class="flip-clock">
-      <div class="flip-unit"><div class="flip-card" id="hours">00</div><div class="labels">HRS</div></div>
-      <div class="flip-unit"><div class="flip-card" id="minutes">00</div><div class="labels">MIN</div></div>
-      <div class="flip-unit"><div class="flip-card" id="seconds">00</div><div class="labels">SEC</div></div>
-    </div>
-
-    <div id="currentTime"></div>
-    <div id="location">Detecting your location...</div>
+    <div class="time-box"><span id="hours">00</span><div class="label">HRS</div></div>
+    <div class="time-box"><span id="minutes">00</span><div class="label">MIN</div></div>
+    <div class="time-box"><span id="seconds">00</span><div class="label">SEC</div></div>
   </div>
+  <div class="current-time" id="currentTime">Current Time: --:--:--</div>
 
   <script>
-    let userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    function pad(num) {
-      return num.toString().padStart(2, '0');
-    }
-
-    function flipCard(card, newValue) {
-      if (card.textContent === newValue) return;
-      card.classList.add('flip');
-      setTimeout(() => {
-        card.textContent = newValue;
-        card.classList.remove('flip');
-      }, 350);
-    }
-
     function updateClock() {
       const now = new Date();
-      const localTime = new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }));
+      const hrs = now.getHours();
+      const mins = now.getMinutes();
+      const secs = now.getSeconds();
 
-      const hoursNow = localTime.getHours();
-      const minutesNow = localTime.getMinutes();
-      const secondsNow = localTime.getSeconds();
+      // Display local time
+      document.getElementById('currentTime').innerText =
+        `Current Time: ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-      const midnight = new Date(localTime);
-      midnight.setHours(24, 0, 0, 0);
-      const diff = midnight - localTime;
+      // Calculate time left until midnight
+      const nextMidnight = new Date();
+      nextMidnight.setHours(24, 0, 0, 0);
+      const diff = nextMidnight - now;
 
-      const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-      const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+      let remainingHours = Math.floor(diff / (1000 * 60 * 60));
+      let remainingMinutes = Math.floor((diff / (1000 * 60)) % 60);
+      let remainingSeconds = Math.floor((diff / 1000) % 60);
 
-      flipCard(document.getElementById('hours'), pad(hoursLeft));
-      flipCard(document.getElementById('minutes'), pad(minutesLeft));
-      flipCard(document.getElementById('seconds'), pad(secondsLeft));
+      document.getElementById('hours').innerText = remainingHours.toString().padStart(2, '0');
+      document.getElementById('minutes').innerText = remainingMinutes.toString().padStart(2, '0');
+      document.getElementById('seconds').innerText = remainingSeconds.toString().padStart(2, '0');
 
-      const ampm = hoursNow >= 12 ? 'PM' : 'AM';
-      const hr = hoursNow % 12 || 12;
-      document.getElementById('currentTime').textContent =
-        `Current Time: ${pad(hr)}:${pad(minutesNow)}:${pad(secondsNow)} ${ampm}`;
-
-      if (hoursLeft === 0 && minutesLeft === 0 && secondsLeft === 0) {
-        document.body.classList.add('fade');
-        setTimeout(() => document.body.classList.remove('fade'), 2000);
+      // Flash transition at midnight
+      if (remainingHours === 0 && remainingMinutes === 0 && remainingSeconds === 0) {
+        document.body.style.transition = "background 1s";
+        document.body.style.backgroundColor = "#111";
+        setTimeout(() => document.body.style.backgroundColor = "#000", 1000);
       }
     }
 
-    function getLocation() {
-      if
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
