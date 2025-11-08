@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Location Based Midnight Clock</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #000000, #050505, #0a0a0a);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+      transition: background-color 2s, color 2s;
+      text-align: center;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-size: 2.5vw;
+      color: #00ffff;
+      text-shadow: 0 0 15px #00ffff, 0 0 35px #00ffff;
+      margin-bottom: 2vh;
+    }
+
+    .flip-clock {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .flip-unit {
+      perspective: 1000px;
+    }
+
+    .flip-card {
+      position: relative;
+      width: 100px;
+      height: 130px;
+      background: #111;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #00ffff;
+      overflow: hidden;
+      color: #00ffff;
+      font-size: 4em;
+      line-height: 130px;
+      transform-style: preserve-3d;
+      transition: transform 0.7s ease;
+    }
+
+    .flip-card.flip {
+      transform: rotateX(-180deg);
+    }
+
+    .labels {
+      font-size: 1.2vw;
+      margin-top: 5px;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    #currentTime {
+      margin-top: 4vh;
+      font-size: 3vw;
+      text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+    }
+
+    #location {
+      font-size: 1.2vw;
+      margin-top: 2vh;
+      color: #0ff;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 6vw; }
+      .flip-card {
+        width: 60px;
+        height: 80px;
+        font-size: 2.2em;
+        line-height: 80px;
+      }
+      .labels { font-size: 3vw; }
+      #currentTime { font-size: 7vw; }
+      #location { font-size: 3vw; }
+    }
+
+    .fade {
+      background: white !important;
+      color: black !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>Time Left Until Midnight</h1>
+
+  <div class="flip-clock">
+    <div class="flip-unit"><div class="flip-card" id="hours">00</div><div class="labels">HRS</div></div>
+    <div class="flip-unit"><div class="flip-card" id="minutes">00</div><div class="labels">MIN</div></div>
+    <div class="flip-unit"><div class="flip-card" id="seconds">00</div><div class="labels">SEC</div></div>
+  </div>
+
+  <div id="currentTime"></div>
+  <div id="location">Detecting your location...</div>
+
+  <script>
+    let userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    function pad(num) {
+      return num.toString().padStart(2, '0');
+    }
+
+    function flipCard(card, newValue) {
+      if (card.textContent === newValue) return;
+      card.classList.add('flip');
+      setTimeout(() => {
+        card.textContent = newValue;
+        card.classList.remove('flip');
+      }, 350);
+    }
+
+    function updateClock() {
+      const now = new Date();
+
+      // Localized time
+      const localTime = new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }));
+
+      const hoursNow = localTime.getHours();
+      const minutesNow = localTime.getMinutes();
+      const secondsNow = localTime.getSeconds();
+
+      // Calculate local midnight
+      const midnight = new Date(localTime);
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight - localTime;
+
+      const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+
+      flipCard(document.getElementById('hours'), pad(hoursLeft));
+      flipCard(document.getElementById('minutes'), pad(minutesLeft));
+      flipCard(document.getElementById('seconds'), pad(secondsLeft));
+
+      // Current time display
+      const ampm = hoursNow >= 12 ? 'PM' : 'AM';
+      const hr = hoursNow % 12 || 12;
+      document.getElementById('currentTime').textContent =
+        `Current Time: ${pad(hr)}:${pad(minutesNow)}:${pad(secondsNow)} ${ampm}`;
+
+      if (hoursLeft === 0 && minutesLeft === 0 && secondsLeft === 0) {
+        document.body.classList.add('fade');
+        setTimeout(() => document.body.classList.remove('fade'), 2000);
+      }
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
+              .then(res => res.json())
+              .then(data => {
+                const city = data.city || data.locality || data.principalSubdivision || "your area";
+                document.getElementById("location").textContent = `Your local time zone: ${city}, ${data.countryName}`;
+              })
+              .catch(() => {
+                document.getElementById("location").textContent = "Location detected but name unavailable.";
+              });
+          },
+          () => {
+            document.getElementById("location").textContent = "Location access denied. Showing system time.";
+          }
+        );
+      } else {
+        document.getElementById("location").textContent = "Geolocation not supported.";
+      }
+    }
+
+    getLocation();
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
