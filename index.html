@@ -11,101 +11,70 @@
       box-sizing: border-box;
     }
     body {
-      background-color: #000;
+      background-color: black;
       color: white;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      font-family: "Poppins", sans-serif;
+      font-family: "SF Pro Display", "Poppins", sans-serif;
       text-align: center;
     }
     h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
+      font-size: 1.8rem;
+      margin-bottom: 40px;
+      font-weight: 500;
+      letter-spacing: 1px;
     }
-    .clock-container {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .time-box {
-      background-color: #111;
-      border: 2px solid #333;
-      border-radius: 12px;
-      padding: 20px 15px;
-      text-align: center;
-      width: 70px;
-      box-shadow: 0 0 15px rgba(255,255,255,0.05);
-    }
-    .time-box span {
-      display: block;
-      font-size: 2rem;
-      animation: flip 1s ease-in-out;
-    }
-    @keyframes flip {
-      0% { transform: rotateX(0deg); }
-      50% { transform: rotateX(90deg); }
-      100% { transform: rotateX(0deg); }
-    }
-    .label {
-      font-size: 0.8rem;
-      margin-top: 5px;
-      opacity: 0.7;
+    .timer {
+      font-size: 4rem;
+      letter-spacing: 4px;
+      margin-bottom: 30px;
     }
     .current-time {
-      margin-top: 30px;
       font-size: 1.5rem;
-      letter-spacing: 2px;
+      opacity: 0.8;
     }
   </style>
 </head>
 <body>
   <h1>Time Left Till Midnight</h1>
-  <div class="clock-container">
-    <div class="time-box"><span id="hours">00</span><div class="label">HRS</div></div>
-    <div class="time-box"><span id="minutes">00</span><div class="label">MIN</div></div>
-    <div class="time-box"><span id="seconds">00</span><div class="label">SEC</div></div>
-  </div>
+  <div class="timer" id="countdown">00:00:00</div>
   <div class="current-time" id="currentTime">Current Time: --:--:--</div>
 
   <script>
     function updateClock() {
       const now = new Date();
+
+      // Current time in 12-hour format
       let hrs = now.getHours();
       const mins = now.getMinutes();
       const secs = now.getSeconds();
-
-      // Convert to 12-hour format
       const ampm = hrs >= 12 ? "PM" : "AM";
       hrs = hrs % 12;
-      hrs = hrs ? hrs : 12; // 0 becomes 12
+      hrs = hrs ? hrs : 12;
 
-      // Display 12-hour format current time
-      document.getElementById('currentTime').innerText =
+      document.getElementById("currentTime").innerText =
         `Current Time: ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} ${ampm}`;
 
-      // Calculate time left until midnight
-      const nextMidnight = new Date();
-      nextMidnight.setHours(24, 0, 0, 0);
-      const diff = nextMidnight - now;
+      // Countdown till midnight
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight - now;
 
-      let remainingHours = Math.floor(diff / (1000 * 60 * 60));
-      let remainingMinutes = Math.floor((diff / (1000 * 60)) % 60);
-      let remainingSeconds = Math.floor((diff / 1000) % 60);
+      const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((diff / (1000 * 60)) % 60);
+      const secondsLeft = Math.floor((diff / 1000) % 60);
 
-      document.getElementById('hours').innerText = remainingHours.toString().padStart(2, '0');
-      document.getElementById('minutes').innerText = remainingMinutes.toString().padStart(2, '0');
-      document.getElementById('seconds').innerText = remainingSeconds.toString().padStart(2, '0');
+      document.getElementById("countdown").innerText =
+        `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
 
-      // Flash background at midnight
-      if (remainingHours === 0 && remainingMinutes === 0 && remainingSeconds === 0) {
+      // Smooth background flash at midnight
+      if (hoursLeft === 0 && minutesLeft === 0 && secondsLeft === 0) {
         document.body.style.transition = "background 1s";
         document.body.style.backgroundColor = "#111";
-        setTimeout(() => document.body.style.backgroundColor = "#000", 1000);
+        setTimeout(() => (document.body.style.backgroundColor = "#000"), 1000);
       }
     }
 
