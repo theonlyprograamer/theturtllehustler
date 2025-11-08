@@ -75,13 +75,18 @@
   <script>
     function updateClock() {
       const now = new Date();
-      const hrs = now.getHours();
+      let hrs = now.getHours();
       const mins = now.getMinutes();
       const secs = now.getSeconds();
 
-      // Display local time
+      // Convert to 12-hour format
+      const ampm = hrs >= 12 ? "PM" : "AM";
+      hrs = hrs % 12;
+      hrs = hrs ? hrs : 12; // 0 becomes 12
+
+      // Display 12-hour format current time
       document.getElementById('currentTime').innerText =
-        `Current Time: ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        `Current Time: ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} ${ampm}`;
 
       // Calculate time left until midnight
       const nextMidnight = new Date();
@@ -96,7 +101,7 @@
       document.getElementById('minutes').innerText = remainingMinutes.toString().padStart(2, '0');
       document.getElementById('seconds').innerText = remainingSeconds.toString().padStart(2, '0');
 
-      // Flash transition at midnight
+      // Flash background at midnight
       if (remainingHours === 0 && remainingMinutes === 0 && remainingSeconds === 0) {
         document.body.style.transition = "background 1s";
         document.body.style.backgroundColor = "#111";
