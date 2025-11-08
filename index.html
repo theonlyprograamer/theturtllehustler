@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Location Based Midnight Clock</title>
+  <title>Local Midnight Clock</title>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
@@ -15,27 +15,27 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #000000, #050505, #0a0a0a);
-      background-size: 400% 400%;
-      animation: gradientShift 20s ease infinite;
-      color: #00ffff;
+      background: #000;
+      color: #fff;
       font-family: 'Orbitron', sans-serif;
-      overflow: hidden;
-      transition: background-color 2s, color 2s;
       text-align: center;
-    }
-
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      transition: background-color 2s, color 2s;
     }
 
     h1 {
       font-size: 2.5vw;
-      color: #00ffff;
-      text-shadow: 0 0 15px #00ffff, 0 0 35px #00ffff;
       margin-bottom: 2vh;
+      color: #fff;
+    }
+
+    .clock-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      border: 2px solid #fff;
+      border-radius: 20px;
+      width: fit-content;
     }
 
     .flip-clock {
@@ -55,9 +55,9 @@
       height: 130px;
       background: #111;
       border-radius: 10px;
-      box-shadow: 0 0 20px #00ffff;
+      border: 1px solid #fff;
       overflow: hidden;
-      color: #00ffff;
+      color: #fff;
       font-size: 4em;
       line-height: 130px;
       transform-style: preserve-3d;
@@ -71,20 +71,19 @@
     .labels {
       font-size: 1.2vw;
       margin-top: 5px;
-      text-shadow: 0 0 10px #00ffff;
+      color: #aaa;
     }
 
     #currentTime {
-      margin-top: 4vh;
-      font-size: 3vw;
-      text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+      margin-top: 3vh;
+      font-size: 2vw;
+      color: #fff;
     }
 
     #location {
       font-size: 1.2vw;
-      margin-top: 2vh;
-      color: #0ff;
-      text-shadow: 0 0 10px #00ffff;
+      margin-top: 1vh;
+      color: #aaa;
     }
 
     @media (max-width: 768px) {
@@ -96,27 +95,34 @@
         line-height: 80px;
       }
       .labels { font-size: 3vw; }
-      #currentTime { font-size: 7vw; }
-      #location { font-size: 3vw; }
+      #currentTime { font-size: 6vw; }
+      #location { font-size: 3.5vw; }
+      .clock-container {
+        padding: 1.5rem;
+        border-width: 1.5px;
+        border-radius: 15px;
+      }
     }
 
     .fade {
-      background: white !important;
-      color: black !important;
+      background: #fff !important;
+      color: #000 !important;
     }
   </style>
 </head>
 <body>
-  <h1>Time Left Until Midnight</h1>
+  <div class="clock-container">
+    <h1>Time Left Until Midnight</h1>
 
-  <div class="flip-clock">
-    <div class="flip-unit"><div class="flip-card" id="hours">00</div><div class="labels">HRS</div></div>
-    <div class="flip-unit"><div class="flip-card" id="minutes">00</div><div class="labels">MIN</div></div>
-    <div class="flip-unit"><div class="flip-card" id="seconds">00</div><div class="labels">SEC</div></div>
+    <div class="flip-clock">
+      <div class="flip-unit"><div class="flip-card" id="hours">00</div><div class="labels">HRS</div></div>
+      <div class="flip-unit"><div class="flip-card" id="minutes">00</div><div class="labels">MIN</div></div>
+      <div class="flip-unit"><div class="flip-card" id="seconds">00</div><div class="labels">SEC</div></div>
+    </div>
+
+    <div id="currentTime"></div>
+    <div id="location">Detecting your location...</div>
   </div>
-
-  <div id="currentTime"></div>
-  <div id="location">Detecting your location...</div>
 
   <script>
     let userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -136,15 +142,12 @@
 
     function updateClock() {
       const now = new Date();
-
-      // Localized time
       const localTime = new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }));
 
       const hoursNow = localTime.getHours();
       const minutesNow = localTime.getMinutes();
       const secondsNow = localTime.getSeconds();
 
-      // Calculate local midnight
       const midnight = new Date(localTime);
       midnight.setHours(24, 0, 0, 0);
       const diff = midnight - localTime;
@@ -157,7 +160,6 @@
       flipCard(document.getElementById('minutes'), pad(minutesLeft));
       flipCard(document.getElementById('seconds'), pad(secondsLeft));
 
-      // Current time display
       const ampm = hoursNow >= 12 ? 'PM' : 'AM';
       const hr = hoursNow % 12 || 12;
       document.getElementById('currentTime').textContent =
@@ -170,33 +172,4 @@
     }
 
     function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
-              .then(res => res.json())
-              .then(data => {
-                const city = data.city || data.locality || data.principalSubdivision || "your area";
-                document.getElementById("location").textContent = `Your local time zone: ${city}, ${data.countryName}`;
-              })
-              .catch(() => {
-                document.getElementById("location").textContent = "Location detected but name unavailable.";
-              });
-          },
-          () => {
-            document.getElementById("location").textContent = "Location access denied. Showing system time.";
-          }
-        );
-      } else {
-        document.getElementById("location").textContent = "Geolocation not supported.";
-      }
-    }
-
-    getLocation();
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
-</body>
-</html>
+      if
