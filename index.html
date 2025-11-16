@@ -1,246 +1,292 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flats Near Infopark & Kakkanad</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kakkanad & Infopark Flats – For Rent</title>
 
-  <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f0f2f5;
-      color: #333;
-      overflow-x: hidden;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6f9;
+}
 
-    header {
-      background: linear-gradient(135deg, #0066cc, #004c99);
-      color: white;
-      padding: 40px 20px;
-      text-align: center;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    }
+/* Navbar */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: #0047b3;
+  color: #fff;
+  font-size: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
 
-    .container {
-      max-width: 950px;
-      margin: auto;
-      padding: 20px;
-    }
+nav a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: 0.3s;
+}
 
-    .flat {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 25px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      transition: 0.3s;
-    }
+nav a:hover {
+  color: #ffe680;
+}
 
-    .flat:hover {
-      transform: scale(1.01);
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    }
+/* Section */
+.container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: auto;
+}
 
-    .flat img {
-      width: 100%;
-      height: auto;
-      border-radius: 10px;
-    }
+/* Search Filters */
+.filters {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
 
-    h3 {
-      margin: 10px 0;
-      color: #014a88;
-    }
+.filters select, .filters input {
+  padding: 10px;
+  margin-right: 10px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+}
 
-    .price-box {
-      background: #e8f3ff;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
+/* Flats */
+.flat {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: 0.3s;
+}
 
-    .offer {
-      background: #ffe8cc;
-      padding: 10px;
-      border-left: 5px solid #ff8800;
-      border-radius: 6px;
-      margin-top: 8px;
-      font-weight: bold;
-    }
+.flat:hover {
+  transform: scale(1.01);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.19);
+}
 
-    .contact-btn {
-      display: inline-block;
-      padding: 12px 22px;
-      background: #25D366;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      transition: 0.3s;
-      font-size: 16px;
-    }
+.flat img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
 
-    .contact-btn:hover {
-      background: #1eb95a;
-      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.5);
-      transform: translateY(-2px);
-    }
+.facilities {
+  margin-top: 10px;
+  font-size: 15px;
+  padding: 8px;
+  background: #eaf3ff;
+  border-radius: 8px;
+}
 
-    footer {
-      text-align: center;
-      padding: 20px;
-      margin-top: 30px;
-      background: #e6e6e6;
-      font-size: 0.9em;
-      color: #444;
-    }
+.price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 10px;
+  color: #0047b3;
+}
 
-    /* POPUP COUPON BOX */
-    #couponBox {
-      position: fixed;
-      right: -350px;
-      top: 100px;
-      width: 280px;
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-      transition: 0.5s;
-      z-index: 9999;
-    }
+/* Contact Button */
+.contact-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 12px 22px;
+  background: #25d366;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: 0.3s;
+}
 
-    #couponBox.show {
-      right: 20px;
-    }
+.contact-btn:hover {
+  background: #1fb257;
+  transform: translateY(-2px);
+}
 
-    #couponBox h2 {
-      margin-top: 0;
-      color: #d43f00;
-      font-size: 22px;
-    }
+/* Floating WhatsApp bubble */
+.whatsapp-float {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #25D366;
+  color: white;
+  padding: 15px;
+  font-size: 22px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1000;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
-    #couponBox input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-      font-size: 16px;
-    }
+.whatsapp-float:hover {
+  transform: scale(1.1);
+}
 
-    #couponBox button {
-      width: 100%;
-      padding: 10px;
-      background: #ff6600;
-      border: none;
-      margin-top: 10px;
-      border-radius: 6px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+/* Coupon Popup */
+.coupon-popup {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  background: #ffcc00;
+  padding: 15px 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+  animation: pop 0.5s ease;
+  cursor: pointer;
+}
 
-    #couponBox button:hover {
-      background: #e65a00;
-    }
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
 
-    #couponMsg {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
+/* Discount Counterfeit Animation */
+.discount-anim {
+  animation: flash 1s infinite alternate;
+}
+
+@keyframes flash {
+  0% { color: #008000; transform: scale(1); }
+  100% { color: #00cc00; transform: scale(1.05); }
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <h1>Flats Near Kakkanad & Infopark, Kochi</h1>
-    <p>Premium Flats • Special Discounts • Direct Owner Contact</p>
-  </header>
-
-  <!-- COUPON POPUP -->
-  <div id="couponBox">
-    <h2>🔥 LoveDeals Offer</h2>
-    <p>Enter coupon <b>LOVEDEALS</b> to unlock a discount!</p>
-
-    <input type="text" id="couponInput" placeholder="Enter Code">
-    <button onclick="applyCoupon()">Apply</button>
-
-    <div id="couponMsg"></div>
+<!-- NAVBAR -->
+<nav>
+  <div><b>Infopark Rentals</b></div>
+  <div>
+    <a href="#">Home</a>
+    <a href="#flats">Flats</a>
+    <a href="#offers">Offers</a>
+    <a href="#contact">Contact</a>
   </div>
+</nav>
 
-  <script>
-    // Show popup after 3 seconds
-    setTimeout(() => {
-      document.getElementById("couponBox").classList.add("show");
-    }, 3000);
+<!-- COUPON POP-UP -->
+<div class="coupon-popup" onclick="applyCoupon()">
+  🎉 Special Discount! Use code <b>loveDeals</b>
+</div>
 
-    function applyCoupon() {
-      const input = document.getElementById("couponInput").value.trim().toUpperCase();
-      const msg = document.getElementById("couponMsg");
+<div class="container">
 
-      if (input === "LOVEDEALS") {
-        msg.style.color = "green";
-        msg.innerHTML = "✔ Discount Applied! New Price: <b>₹39,445</b>";
-      } else {
-        msg.style.color = "red";
-        msg.innerHTML = "❌ Invalid or Counterfeit Code!";
-      }
+<h2 id="flats">Available Flats Near Kakkanad & Infopark</h2>
+
+<!-- FILTERS -->
+<div class="filters">
+  <select id="bhkFilter">
+    <option value="">Select BHK</option>
+    <option value="2">2 BHK</option>
+    <option value="3">3 BHK</option>
+  </select>
+
+  <select id="furnishFilter">
+    <option value="">Furnished?</option>
+    <option value="yes">Fully Furnished</option>
+    <option value="no">Semi Furnished</option>
+  </select>
+
+  <input type="number" id="rentFilter" placeholder="Max Rent (₹)" />
+  <button onclick="filterFlats()">Search</button>
+</div>
+
+<div id="flatList"></div>
+
+</div>
+
+<!-- FLOATING WHATSAPP BUTTON -->
+<a class="whatsapp-float" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%20am%20interested%20in%20renting%20a%20flat" target="_blank">
+  💬
+</a>
+
+<script>
+/* Data for 10 flats */
+const flats = [
+  {rent:15000, bhk:2, furnished:"no", img:"https://via.placeholder.com/800x400?text=2+BHK+15k", facilities:"Gym, Internet, Water, Electricity"},
+  {rent:18000, bhk:2, furnished:"yes", img:"https://via.placeholder.com/800x400?text=2+BHK+18k", facilities:"Gym, Walking Area"},
+  {rent:20000, bhk:3, furnished:"no", img:"https://via.placeholder.com/800x400?text=3+BHK+20k", facilities:"Internet, Water Supply"},
+  {rent:23000, bhk:2, furnished:"yes", img:"https://via.placeholder.com/800x400?text=2+BHK+23k", facilities:"Gym, Electricity Backup"},
+  {rent:26000, bhk:3, furnished:"no", img:"https://via.placeholder.com/800x400?text=3+BHK+26k", facilities:"Walking Area, Security"},
+  {rent:30000, bhk:3, furnished:"yes", img:"https://via.placeholder.com/800x400?text=3+BHK+30k", facilities:"Gym + Pool"},
+  {rent:32000, bhk:2, furnished:"no", img:"https://via.placeholder.com/800x400?text=2+BHK+32k", facilities:"Internet + Water"},
+  {rent:35000, bhk:3, furnished:"yes", img:"https://via.placeholder.com/800x400?text=3+BHK+35k", facilities:"Gym, Parking"},
+  {rent:42000, bhk:3, furnished:"no", img:"https://via.placeholder.com/800x400?text=3+BHK+42k", facilities:"Premium Gym + Pool"},
+  {rent:48000, bhk:3, furnished:"yes", img:"https://via.placeholder.com/800x400?text=3+BHK+48k", facilities:"Luxury Amenities, 24/7 Power"}
+];
+
+let couponUsed = false;
+
+function displayFlats(list) {
+  const div = document.getElementById("flatList");
+  div.innerHTML = "";
+
+  list.forEach(f => {
+    let price = f.rent;
+
+    if (couponUsed) {
+      price = Math.round(price * 0.92); // 8% discount (fake heavy discount effect)
     }
-  </script>
 
-  <div class="container">
+    div.innerHTML += `
+      <div class="flat">
+        <img src="${f.img}">
+        <div class="price">₹ ${price} / month</div>
+        <div>BHK: ${f.bhk} • Furnished: ${f.furnished.toUpperCase()}</div>
+        <div class="facilities"><b>Facilities:</b> ${f.facilities}</div>
 
-    <!-- Existing Flats and Offers (No change required from previous version) -->
-    <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=Luxury+Flat+Kakkanad">
-      <h3>3 BHK Luxury Apartment – Near Infopark</h3>
-      <div class="price-box">
-        <p><strong>Original Rent:</strong> ₹45,000</p>
-        <p><strong>Updated (10% Increase):</strong> ₹49,500</p>
+        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%20want%20to%20rent%20the%20flat%20priced%20${price}">
+          Contact Owner
+        </a>
       </div>
-      <p>Perfect for IT employees. Spacious, fully furnished.</p>
-      <a class="contact-btn" href="https://wa.me/919061001602">Contact on WhatsApp</a>
-    </div>
+    `;
+  });
+}
 
-    <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=2+BHK+Kakkanad">
-      <h3>2 BHK Premium Flat – Kakkanad</h3>
-      <div class="price-box">
-        <p><strong>Original Rent:</strong> ₹30,000</p>
-        <p><strong>Updated (10% Increase):</strong> ₹33,000</p>
-      </div>
-      <p>Modern amenities, balcony, great location.</p>
-      <a class="contact-btn" href="https://wa.me/919061001602">Contact on WhatsApp</a>
-    </div>
+displayFlats(flats);
 
-    <!-- SPECIAL OFFER FLAT -->
-    <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=Special+Offer+Flat">
-      <h3>🔥 Special Offer 3 BHK – Edachira / Infopark</h3>
+/* Filters */
+function filterFlats() {
+  let bhk = document.getElementById("bhkFilter").value;
+  let furnished = document.getElementById("furnishFilter").value;
+  let rent = document.getElementById("rentFilter").value;
 
-      <div class="price-box">
-        <p><strong>Original Rent:</strong> ₹35,000</p>
-        <p><strong>After 15% Increase:</strong> ₹40,250</p>
-        <p><strong>LOVEDEALS Price:</strong> <span style="color:green; font-weight:bold;">₹39,445</span></p>
-      </div>
+  const filtered = flats.filter(f => 
+    (bhk === "" || f.bhk == bhk) &&
+    (furnished === "" || f.furnished == furnished) &&
+    (rent === "" || f.rent <= rent)
+  );
 
-      <div class="offer">💥 Limited Time Deal – Save ₹805 Instantly!</div>
+  displayFlats(filtered);
+}
 
-      <p>Beautiful 3 BHK with covered parking & CCTV.</p>
-      <a class="contact-btn" href="https://wa.me/919061001602">Grab Special Offer</a>
-    </div>
+/* Coupon Code */
+function applyCoupon() {
+  let code = prompt("Enter your offer code:");
 
-  </div>
-
-  <footer>
-    © 2025 FlatsNearInfopark • All Rights Reserved • Mathews • +91-9061001602
-  </footer>
+  if (code === "loveDeals") {
+    couponUsed = true;
+    alert("💥 Coupon Applied! You unlocked a HUGE Discount!");
+    displayFlats(flats);
+  } else {
+    alert("❌ Invalid Code");
+  }
+}
+</script>
 
 </body>
-
 </html>
