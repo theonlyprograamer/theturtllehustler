@@ -3,83 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Midnight Countdown</title>
+  <title>Flats Near Infopark & Kakkanad</title>
   <style>
-    * {
+    body {
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      background: #f5f5f5;
+      color: #333;
     }
-    body {
-      background-color: black;
+    header {
+      background: #0066cc;
       color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: "SF Pro Display", "Poppins", sans-serif;
+      padding: 20px;
       text-align: center;
     }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 40px;
-      font-weight: 500;
-      letter-spacing: 1px;
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
     }
-    .timer {
-      font-size: 4rem;
-      letter-spacing: 4px;
-      margin-bottom: 30px;
+    .flat {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .current-time {
-      font-size: 1.5rem;
-      opacity: 0.8;
+    .flat img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+    .flat-info {
+      margin-top: 10px;
+    }
+    .flat-info h3 {
+      margin: 0 0 10px 0;
+    }
+    .contact-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #25D366; /* WhatsApp green */
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #777;
     }
   </style>
 </head>
 <body>
-  <h1>Time Left Till Midnight</h1>
-  <div class="timer" id="countdown">00:00:00</div>
-  <div class="current-time" id="currentTime">Current Time: --:--:--</div>
 
-  <script>
-    function updateClock() {
-      const now = new Date();
+  <header>
+    <h1>Flats Near Kakkanad & Infopark, Kochi</h1>
+    <p>Your next home or investment in the IT hub of Kochi</p>
+  </header>
 
-      // Current time in 12-hour format
-      let hrs = now.getHours();
-      const mins = now.getMinutes();
-      const secs = now.getSeconds();
-      const ampm = hrs >= 12 ? "PM" : "AM";
-      hrs = hrs % 12;
-      hrs = hrs ? hrs : 12;
+  <div class="container">
 
-      document.getElementById("currentTime").innerText =
-        `Current Time: ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} ${ampm}`;
+    <!-- Flat #1 -->
+    <div class="flat">
+      <img src="https://via.placeholder.com/800x400?text=Flat+1+Near+Infopark" alt="Flat 1">
+      <div class="flat-info">
+        <h3>3 BHK Luxury Apartment – Near Infopark</h3>
+        <p><strong>Original Rent:</strong> ₹ 45,000 / month</p>
+        <p><strong>Adjusted (Your Price):</strong> ₹ 49,500 / month</p>
+        <p>Spacious 3 BHK on 16th floor, beautiful views, 3 bathrooms, 2 balconies. Very close to Infopark campus.</p>
+        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%203%20BHK%20flat">Contact on WhatsApp</a>
+      </div>
+    </div>
 
-      // Countdown till midnight
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
-      const diff = midnight - now;
+    <!-- Flat #2 -->
+    <div class="flat">
+      <img src="https://via.placeholder.com/800x400?text=Flat+2+Kakkanad" alt="Flat 2">
+      <div class="flat-info">
+        <h3>2 BHK Cozy Flat – Kakkanad / Infopark Area</h3>
+        <p><strong>Original Rent:</strong> ₹ 30,000 / month</p>
+        <p><strong>Adjusted (Your Price):</strong> ₹ 33,000 / month</p>
+        <p>Comfortable 2 BHK, semi-furnished, good ventilation, walking distance to Infopark and amenities.</p>
+        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%202%20BHK%20flat">Contact on WhatsApp</a>
+      </div>
+    </div>
 
-      const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-      const minutesLeft = Math.floor((diff / (1000 * 60)) % 60);
-      const secondsLeft = Math.floor((diff / 1000) % 60);
+    <!-- Flat #3 -->
+    <div class="flat">
+      <img src="https://via.placeholder.com/800x400?text=Flat+3+Kakkanad" alt="Flat 3">
+      <div class="flat-info">
+        <h3>3 BHK Budget Flat – Kakkanad Semi-Furnished</h3>
+        <p><strong>Original Rent:</strong> ₹ 22,500 / month</p>
+        <p><strong>Adjusted (Your Price):</strong> ₹ 24,750 / month</p>
+        <p>Good for families, 3 BHK with basic furnishings. Near public transport and major roads.</p>
+        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%203%20BHK%20budget%20flat">Contact on WhatsApp</a>
+      </div>
+    </div>
 
-      document.getElementById("countdown").innerText =
-        `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+  </div>
 
-      // Smooth background flash at midnight
-      if (hoursLeft === 0 && minutesLeft === 0 && secondsLeft === 0) {
-        document.body.style.transition = "background 1s";
-        document.body.style.backgroundColor = "#111";
-        setTimeout(() => (document.body.style.backgroundColor = "#000"), 1000);
-      }
-    }
+  <footer>
+    &copy; 2025 FlatsNearInfopark. All rights reserved. Contact: +91-90610-01602
+  </footer>
 
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
 </body>
 </html>
