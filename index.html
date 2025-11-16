@@ -1,115 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flats Near Infopark & Kakkanad</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f5f5f5;
+      background: #f0f2f5;
       color: #333;
+      overflow-x: hidden;
     }
+
     header {
-      background: #0066cc;
+      background: linear-gradient(135deg, #0066cc, #004c99);
       color: white;
-      padding: 20px;
+      padding: 40px 20px;
       text-align: center;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     }
+
     .container {
-      max-width: 900px;
+      max-width: 950px;
       margin: auto;
       padding: 20px;
     }
+
     .flat {
       background: white;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: 0.3s;
     }
+
+    .flat:hover {
+      transform: scale(1.01);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
     .flat img {
       width: 100%;
       height: auto;
-      border-radius: 5px;
+      border-radius: 10px;
     }
-    .flat-info {
-      margin-top: 10px;
+
+    h3 {
+      margin: 10px 0;
+      color: #014a88;
     }
-    .flat-info h3 {
-      margin: 0 0 10px 0;
+
+    .price-box {
+      background: #e8f3ff;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
     }
-    .contact-btn {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 10px 20px;
-      background: #25D366; /* WhatsApp green */
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
+
+    .offer {
+      background: #ffe8cc;
+      padding: 10px;
+      border-left: 5px solid #ff8800;
+      border-radius: 6px;
+      margin-top: 8px;
       font-weight: bold;
     }
+
+    .contact-btn {
+      display: inline-block;
+      padding: 12px 22px;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: 0.3s;
+      font-size: 16px;
+    }
+
+    .contact-btn:hover {
+      background: #1eb95a;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.5);
+      transform: translateY(-2px);
+    }
+
     footer {
       text-align: center;
-      padding: 15px;
+      padding: 20px;
       margin-top: 30px;
+      background: #e6e6e6;
       font-size: 0.9em;
-      color: #777;
+      color: #444;
+    }
+
+    /* POPUP COUPON BOX */
+    #couponBox {
+      position: fixed;
+      right: -350px;
+      top: 100px;
+      width: 280px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+      transition: 0.5s;
+      z-index: 9999;
+    }
+
+    #couponBox.show {
+      right: 20px;
+    }
+
+    #couponBox h2 {
+      margin-top: 0;
+      color: #d43f00;
+      font-size: 22px;
+    }
+
+    #couponBox input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    #couponBox button {
+      width: 100%;
+      padding: 10px;
+      background: #ff6600;
+      border: none;
+      margin-top: 10px;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #couponBox button:hover {
+      background: #e65a00;
+    }
+
+    #couponMsg {
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
   <header>
     <h1>Flats Near Kakkanad & Infopark, Kochi</h1>
-    <p>Your next home or investment in the IT hub of Kochi</p>
+    <p>Premium Flats • Special Discounts • Direct Owner Contact</p>
   </header>
+
+  <!-- COUPON POPUP -->
+  <div id="couponBox">
+    <h2>🔥 LoveDeals Offer</h2>
+    <p>Enter coupon <b>LOVEDEALS</b> to unlock a discount!</p>
+
+    <input type="text" id="couponInput" placeholder="Enter Code">
+    <button onclick="applyCoupon()">Apply</button>
+
+    <div id="couponMsg"></div>
+  </div>
+
+  <script>
+    // Show popup after 3 seconds
+    setTimeout(() => {
+      document.getElementById("couponBox").classList.add("show");
+    }, 3000);
+
+    function applyCoupon() {
+      const input = document.getElementById("couponInput").value.trim().toUpperCase();
+      const msg = document.getElementById("couponMsg");
+
+      if (input === "LOVEDEALS") {
+        msg.style.color = "green";
+        msg.innerHTML = "✔ Discount Applied! New Price: <b>₹39,445</b>";
+      } else {
+        msg.style.color = "red";
+        msg.innerHTML = "❌ Invalid or Counterfeit Code!";
+      }
+    }
+  </script>
 
   <div class="container">
 
-    <!-- Flat #1 -->
+    <!-- Existing Flats and Offers (No change required from previous version) -->
     <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=Flat+1+Near+Infopark" alt="Flat 1">
-      <div class="flat-info">
-        <h3>3 BHK Luxury Apartment – Near Infopark</h3>
-        <p><strong>Original Rent:</strong> ₹ 45,000 / month</p>
-        <p><strong>Adjusted (Your Price):</strong> ₹ 49,500 / month</p>
-        <p>Spacious 3 BHK on 16th floor, beautiful views, 3 bathrooms, 2 balconies. Very close to Infopark campus.</p>
-        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%203%20BHK%20flat">Contact on WhatsApp</a>
+      <img src="https://via.placeholder.com/800x400?text=Luxury+Flat+Kakkanad">
+      <h3>3 BHK Luxury Apartment – Near Infopark</h3>
+      <div class="price-box">
+        <p><strong>Original Rent:</strong> ₹45,000</p>
+        <p><strong>Updated (10% Increase):</strong> ₹49,500</p>
       </div>
+      <p>Perfect for IT employees. Spacious, fully furnished.</p>
+      <a class="contact-btn" href="https://wa.me/919061001602">Contact on WhatsApp</a>
     </div>
 
-    <!-- Flat #2 -->
     <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=Flat+2+Kakkanad" alt="Flat 2">
-      <div class="flat-info">
-        <h3>2 BHK Cozy Flat – Kakkanad / Infopark Area</h3>
-        <p><strong>Original Rent:</strong> ₹ 30,000 / month</p>
-        <p><strong>Adjusted (Your Price):</strong> ₹ 33,000 / month</p>
-        <p>Comfortable 2 BHK, semi-furnished, good ventilation, walking distance to Infopark and amenities.</p>
-        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%202%20BHK%20flat">Contact on WhatsApp</a>
+      <img src="https://via.placeholder.com/800x400?text=2+BHK+Kakkanad">
+      <h3>2 BHK Premium Flat – Kakkanad</h3>
+      <div class="price-box">
+        <p><strong>Original Rent:</strong> ₹30,000</p>
+        <p><strong>Updated (10% Increase):</strong> ₹33,000</p>
       </div>
+      <p>Modern amenities, balcony, great location.</p>
+      <a class="contact-btn" href="https://wa.me/919061001602">Contact on WhatsApp</a>
     </div>
 
-    <!-- Flat #3 -->
+    <!-- SPECIAL OFFER FLAT -->
     <div class="flat">
-      <img src="https://via.placeholder.com/800x400?text=Flat+3+Kakkanad" alt="Flat 3">
-      <div class="flat-info">
-        <h3>3 BHK Budget Flat – Kakkanad Semi-Furnished</h3>
-        <p><strong>Original Rent:</strong> ₹ 22,500 / month</p>
-        <p><strong>Adjusted (Your Price):</strong> ₹ 24,750 / month</p>
-        <p>Good for families, 3 BHK with basic furnishings. Near public transport and major roads.</p>
-        <a class="contact-btn" href="https://wa.me/919061001602?text=Hi%20Mathews%2C%20I%27m%20interested%20in%20the%203%20BHK%20budget%20flat">Contact on WhatsApp</a>
+      <img src="https://via.placeholder.com/800x400?text=Special+Offer+Flat">
+      <h3>🔥 Special Offer 3 BHK – Edachira / Infopark</h3>
+
+      <div class="price-box">
+        <p><strong>Original Rent:</strong> ₹35,000</p>
+        <p><strong>After 15% Increase:</strong> ₹40,250</p>
+        <p><strong>LOVEDEALS Price:</strong> <span style="color:green; font-weight:bold;">₹39,445</span></p>
       </div>
+
+      <div class="offer">💥 Limited Time Deal – Save ₹805 Instantly!</div>
+
+      <p>Beautiful 3 BHK with covered parking & CCTV.</p>
+      <a class="contact-btn" href="https://wa.me/919061001602">Grab Special Offer</a>
     </div>
 
   </div>
 
   <footer>
-    &copy; 2025 FlatsNearInfopark. All rights reserved. Contact: +91-90610-01602
+    © 2025 FlatsNearInfopark • All Rights Reserved • Mathews • +91-9061001602
   </footer>
 
 </body>
+
 </html>
