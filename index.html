@@ -257,6 +257,129 @@
   @media (prefers-reduced-motion: reduce){
     *{animation:none !important;transition:none !important;}
   }
+
+  /* ===== MODALS ===== */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(10,20,15,0.72);
+    backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--pine-deep);
+    border:1px solid var(--line);
+    border-radius:22px;
+    width:100%;max-width:440px;
+    padding:38px;
+    position:relative;
+    max-height:88vh;overflow-y:auto;
+    animation:modalIn .22s ease;
+  }
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .modal-close{
+    position:absolute;top:18px;right:18px;
+    background:none;border:none;color:var(--sand-dim);
+    font-size:1.4rem;cursor:pointer;line-height:1;
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease, color .2s ease;
+  }
+  .modal-close:hover{background:rgba(243,233,210,0.08);color:var(--sand);}
+  .modal-box h3{font-size:1.5rem;margin-bottom:6px;}
+  .modal-sub{color:var(--sand-dim);font-size:0.88rem;margin-bottom:26px;}
+  .tabs{display:flex;gap:4px;background:rgba(0,0,0,0.2);border-radius:100px;padding:4px;margin-bottom:26px;}
+  .tab-btn{
+    flex:1;background:none;border:none;color:var(--sand-dim);
+    padding:9px 0;border-radius:100px;font-size:0.85rem;font-weight:600;
+    cursor:pointer;transition:background .2s ease, color .2s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .tab-btn.active{background:var(--coral);color:var(--pine-deep);}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:0.8rem;color:var(--sand-dim);margin-bottom:7px;font-family:'JetBrains Mono',monospace;}
+  .field input,.field select,.field textarea{
+    width:100%;background:rgba(243,233,210,0.06);
+    border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;color:var(--sand);font-size:0.92rem;
+    font-family:'Inter',sans-serif;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;border-color:var(--coral);background:rgba(243,233,210,0.1);
+  }
+  .field textarea{resize:vertical;min-height:80px;}
+  .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23E7DAB9' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+  .form-submit{
+    width:100%;background:var(--coral);color:var(--pine-deep);
+    font-weight:700;border:none;border-radius:100px;
+    padding:14px 0;font-size:0.95rem;cursor:pointer;margin-top:6px;
+    transition:transform .2s ease, box-shadow .2s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .form-submit:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,107,74,0.3);}
+  .form-note{font-size:0.76rem;color:var(--sand-dim);margin-top:14px;text-align:center;line-height:1.5;}
+  .form-switch{font-size:0.85rem;color:var(--sand-dim);text-align:center;margin-top:18px;}
+  .form-switch a{color:var(--coral);font-weight:600;}
+  .success-box{text-align:center;padding:20px 0;}
+  .success-box .checkmark{font-size:2.6rem;margin-bottom:14px;}
+  .success-box h3{margin-bottom:10px;}
+  .success-box p{color:var(--sand-dim);font-size:0.92rem;margin-bottom:24px;}
+
+  /* nav auth state */
+  .user-chip{display:flex;align-items:center;gap:12px;}
+  .user-chip .name{font-size:0.88rem;font-weight:600;color:var(--sand);font-family:'JetBrains Mono',monospace;}
+  .user-chip .logout-btn{
+    background:none;border:1px solid var(--line);color:var(--sand-dim);
+    padding:8px 16px;border-radius:100px;font-size:0.78rem;cursor:pointer;
+    transition:border-color .2s ease, color .2s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .user-chip .logout-btn:hover{border-color:var(--coral);color:var(--coral);}
+
+  /* toast */
+  .toast{
+    position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--sand);color:var(--pine-deep);
+    padding:14px 24px;border-radius:100px;font-size:0.88rem;font-weight:600;
+    z-index:300;opacity:0;pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    box-shadow:0 12px 30px rgba(0,0,0,0.3);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* admin export bar */
+  .admin-bar{
+    background:rgba(0,0,0,0.2);border:1px dashed var(--line);
+    border-radius:14px;padding:18px 22px;margin-top:16px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .admin-bar span{font-size:0.82rem;color:var(--sand-dim);}
+  .admin-bar .exportbtn{
+    background:none;border:1px solid var(--shell);color:var(--sand);
+    padding:9px 18px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+    transition:background .2s ease;
+  }
+  .admin-bar .exportbtn:hover{background:rgba(92,122,90,0.2);}
+
+  /* Internet Identity */
+  .ii-btn{
+    background:linear-gradient(135deg,#5B2FE8,#3B00B9);
+    color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 6px 18px rgba(91,47,232,0.3);
+  }
+  .ii-btn:hover{box-shadow:0 8px 22px rgba(91,47,232,0.45);}
+  .ii-btn:disabled{opacity:0.6;cursor:wait;}
+  .ii-mark{font-size:1.15rem;line-height:1;}
+  .ii-caption{font-size:0.76rem;color:var(--sand-dim);text-align:center;margin-top:10px;}
+  .or-divider{
+    display:flex;align-items:center;gap:12px;margin:24px 0;
+    color:var(--sand-dim);font-size:0.76rem;font-family:'JetBrains Mono',monospace;
+    text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .or-divider span{flex:1;height:1px;background:var(--line);}
 </style>
 </head>
 <body>
@@ -277,7 +400,9 @@
       <a href="#categories">Task types</a>
       <a href="#faq">FAQ</a>
     </div>
-    <a class="navcta" href="#top">Get started</a>
+    <div id="navAuthArea">
+      <button class="navcta" id="navLoginBtn" type="button">Log in / Sign up</button>
+    </div>
     <button class="navtoggle" id="navToggle" aria-label="Toggle menu">☰</button>
   </div>
 </nav>
@@ -290,8 +415,8 @@
       <h1>Slow shell.<br><em>Fast</em> hustle.</h1>
       <p class="lede">Post the task you don't have time for, or pick up one nearby and get paid same day. TurtleHustler connects busy people with local hustlers — no middlemen, no waiting around.</p>
       <div class="hero-ctas">
-        <a class="btn-primary" href="#paths">Post a task</a>
-        <a class="btn-ghost" href="#paths">Start hustling</a>
+        <button class="btn-primary" type="button" id="heroPostBtn">Post a task</button>
+        <button class="btn-ghost" type="button" id="heroHustleBtn">Start hustling</button>
       </div>
       <div class="hero-proof">
         <div><span class="num">12,400+</span><span class="lbl">ACTIVE HUSTLERS</span></div>
@@ -333,7 +458,7 @@
           <li>Chat and confirm before anyone shows up</li>
           <li>Pay only when the task's marked done</li>
         </ul>
-        <a class="cardlink" href="#how">See how posting works →</a>
+        <button class="cardlink" type="button" id="pathPostBtn" style="background:none;border:none;cursor:pointer;font-family:inherit;">Post your first task →</button>
       </div>
       <div class="path-card coral-card">
         <span class="tag">For hustlers</span>
@@ -344,7 +469,7 @@
           <li>Build a rating that gets you better tasks</li>
           <li>Cash out same day, straight to UPI</li>
         </ul>
-        <a class="cardlink" href="#how">See how earning works →</a>
+        <button class="cardlink" type="button" id="pathHustleBtn" style="background:none;border:none;cursor:pointer;font-family:inherit;">Sign up as a hustler →</button>
       </div>
     </div>
   </div>
@@ -434,7 +559,7 @@
   <div class="hexfield"></div>
   <h2>Ready to move at hustle speed?</h2>
   <p>Join thousands posting and completing tasks across India, every single day.</p>
-  <a class="btn-primary" href="#top">Launch TurtleHustler</a>
+  <button class="btn-primary" type="button" id="finalCtaBtn" style="border:none;cursor:pointer;">Launch TurtleHustler</button>
 </div>
 
 <footer>
@@ -472,8 +597,171 @@
       <span>© 2026 TurtleHustler</span>
       <span>Slow shell. Fast hustle.</span>
     </div>
+    <div class="admin-bar">
+      <span>🐢 Site owner tools — export everything collected through the forms on this page.</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="exportbtn" id="exportUsersBtn" type="button">Export signups (.csv)</button>
+        <button class="exportbtn" id="exportTasksBtn" type="button">Export tasks (.csv)</button>
+      </div>
+    </div>
   </div>
 </footer>
+
+<!-- ===== AUTH MODAL ===== -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close-modal>&times;</button>
+    <div id="authFormArea">
+      <button type="button" id="iiLoginBtn" class="form-submit ii-btn">
+        <span class="ii-mark">∞</span> Continue with Internet Identity
+      </button>
+      <p class="ii-caption">Passwordless sign-in secured by the Internet Computer — no password stored anywhere.</p>
+      <div class="or-divider"><span></span>or use email<span></span></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="tabLogin" type="button">Log in</button>
+        <button class="tab-btn" id="tabSignup" type="button">Sign up</button>
+      </div>
+
+      <form id="loginForm">
+        <h3>Welcome back</h3>
+        <p class="modal-sub">Log in to post a task or manage your hustles.</p>
+        <div class="field"><label>Email</label><input type="email" required id="loginEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" required id="loginPassword" placeholder="••••••••"></div>
+        <button class="form-submit" type="submit">Log in</button>
+        <p class="form-note">Demo login — stored in this browser only. No account yet? <a href="#" id="gotoSignup" style="color:var(--coral);font-weight:600;">Sign up</a></p>
+      </form>
+
+      <form id="signupForm" style="display:none;">
+        <h3>Create your account</h3>
+        <p class="modal-sub">Takes about 30 seconds.</p>
+        <div class="field"><label>Full name</label><input type="text" required id="signupName" placeholder="Your name"></div>
+        <div class="field"><label>Email</label><input type="email" required id="signupEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Phone</label><input type="tel" required id="signupPhone" placeholder="98765 43210"></div>
+        <div class="field"><label>City</label><input type="text" required id="signupCity" placeholder="Kochi"></div>
+        <div class="field"><label>I want to</label>
+          <select id="signupRole">
+            <option value="poster">Post tasks</option>
+            <option value="hustler">Complete tasks & earn</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="field"><label>Password</label><input type="password" required id="signupPassword" placeholder="Create a password"></div>
+        <button class="form-submit" type="submit">Create account</button>
+        <p class="form-note">Already have an account? <a href="#" id="gotoLogin" style="color:var(--coral);font-weight:600;">Log in</a></p>
+      </form>
+    </div>
+
+    <div id="iiProfileArea" style="display:none;">
+      <h3>Complete your profile</h3>
+      <p class="modal-sub">Signed in with Internet Identity — just need a couple more details to get you set up.</p>
+      <form id="iiProfileForm">
+        <div class="field"><label>Full name</label><input type="text" required id="iiName" placeholder="Your name"></div>
+        <div class="field"><label>Contact email (optional)</label><input type="email" id="iiEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Phone</label><input type="tel" required id="iiPhone" placeholder="98765 43210"></div>
+        <div class="field"><label>City</label><input type="text" required id="iiCity" placeholder="Kochi"></div>
+        <div class="field"><label>I want to</label>
+          <select id="iiRole">
+            <option value="poster">Post tasks</option>
+            <option value="hustler">Complete tasks & earn</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <button class="form-submit" type="submit">Save & continue</button>
+        <p class="form-note mono" id="iiPrincipalNote" style="word-break:break-all;"></p>
+      </form>
+    </div>
+
+    <div id="authSuccessArea" class="success-box" style="display:none;">
+      <div class="checkmark">🐢</div>
+      <h3>You're in!</h3>
+      <p id="authSuccessMsg">Account created and logged in.</p>
+      <button class="form-submit" data-close-modal type="button">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POST TASK MODAL ===== -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close-modal>&times;</button>
+    <div id="taskFormArea">
+      <h3>Post a task</h3>
+      <p class="modal-sub">We'll notify nearby hustlers the moment this goes live.</p>
+      <form id="taskForm">
+        <div class="field"><label>Task title</label><input type="text" required id="taskTitle" placeholder="e.g. Assemble a study table"></div>
+        <div class="field"><label>Category</label>
+          <select id="taskCategory">
+            <option>Grocery & errands</option>
+            <option>Home cleaning</option>
+            <option>Moving & delivery</option>
+            <option>Repairs & fixes</option>
+            <option>Coding & tech help</option>
+            <option>Tutoring</option>
+            <option>Pet care</option>
+            <option>Paperwork runs</option>
+          </select>
+        </div>
+        <div class="field"><label>Budget (₹)</label><input type="number" required id="taskBudget" placeholder="500"></div>
+        <div class="field"><label>Location / area</label><input type="text" required id="taskLocation" placeholder="e.g. Kadavanthra, Kochi"></div>
+        <div class="field"><label>Details</label><textarea id="taskDetails" placeholder="What needs doing?"></textarea></div>
+        <div class="field"><label>Your contact email</label><input type="email" required id="taskEmail" placeholder="you@example.com"></div>
+        <button class="form-submit" type="submit">Post this task</button>
+        <p class="form-note">Saved to this browser, and emailed to the TurtleHustler team if Formspree is connected.</p>
+      </form>
+    </div>
+    <div id="taskSuccessArea" class="success-box" style="display:none;">
+      <div class="checkmark">✅</div>
+      <h3>Task posted</h3>
+      <p>Hustlers nearby can see it now. We'll email you as offers come in.</p>
+      <button class="form-submit" data-close-modal type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Internet Identity bridge: loads @dfinity/auth-client and exposes
+     window.iiLogin() / window.iiLogout() for the rest of the page to use. -->
+<script type="module">
+  import { AuthClient } from "https://esm.sh/@dfinity/auth-client@2.4.1";
+
+  let authClient = null;
+  let ready = false;
+
+  async function init(){
+    try{
+      authClient = await AuthClient.create();
+      ready = true;
+      window.dispatchEvent(new Event('ii-ready'));
+      if(await authClient.isAuthenticated()){
+        const principal = authClient.getIdentity().getPrincipal().toText();
+        window.dispatchEvent(new CustomEvent('ii-already-authenticated', {detail: principal}));
+      }
+    }catch(e){
+      console.warn('Internet Identity failed to initialize', e);
+      window.dispatchEvent(new Event('ii-unavailable'));
+    }
+  }
+
+  window.iiLogin = function(){
+    return new Promise((resolve, reject)=>{
+      if(!ready || !authClient){ reject(new Error('Internet Identity is still loading — try again in a second.')); return; }
+      authClient.login({
+        identityProvider: 'https://identity.ic0.app',
+        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000), // 7 days
+        onSuccess: () => resolve(authClient.getIdentity().getPrincipal().toText()),
+        onError: (err) => reject(err || new Error('Sign-in was cancelled.'))
+      });
+    });
+  };
+
+  window.iiLogout = async function(){
+    if(authClient) await authClient.logout();
+  };
+
+  init();
+</script>
 
 <script>
   // Build hex-shell map in hero
@@ -526,6 +814,312 @@
       if(!wasOpen) item.classList.add('open');
     });
   });
+
+  /* =========================================================
+     TurtleHustler demo backend
+     - Accounts + tasks are stored in THIS BROWSER only
+       (localStorage). There's no server, so this is a working
+       prototype, not real multi-user auth or storage.
+     - To also get an EMAIL for every signup/task, sign up free
+       at https://formspree.io, create a form, and paste your
+       endpoint into FORMSPREE_ENDPOINT below.
+     ========================================================= */
+  const FORMSPREE_ENDPOINT = "https://formspree.io/f/xojgewbg";
+
+  const DB = {
+    users: () => JSON.parse(localStorage.getItem('th_users') || '[]'),
+    saveUsers: (u) => localStorage.setItem('th_users', JSON.stringify(u)),
+    tasks: () => JSON.parse(localStorage.getItem('th_tasks') || '[]'),
+    saveTasks: (t) => localStorage.setItem('th_tasks', JSON.stringify(t)),
+    currentUser: () => JSON.parse(localStorage.getItem('th_current') || 'null'),
+    setCurrentUser: (u) => localStorage.setItem('th_current', JSON.stringify(u)),
+    logout: () => localStorage.removeItem('th_current'),
+  };
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2800);
+  }
+
+  async function sendToFormspree(payload){
+    if(!FORMSPREE_ENDPOINT) return;
+    try{
+      await fetch(FORMSPREE_ENDPOINT, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify(payload)
+      });
+    }catch(e){ console.warn('Formspree send failed', e); }
+  }
+
+  function toCSV(rows){
+    if(!rows.length) return '';
+    const headerSet = new Set();
+    rows.forEach(r => Object.keys(r).forEach(k => headerSet.add(k)));
+    const headers = Array.from(headerSet);
+    const escape = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+    const lines = [headers.join(',')];
+    rows.forEach(r => lines.push(headers.map(h => escape(r[h])).join(',')));
+    return lines.join('\n');
+  }
+
+  function downloadCSV(filename, rows){
+    if(!rows.length){ showToast('Nothing to export yet.'); return; }
+    const csv = toCSV(rows);
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- modal open/close helpers ----
+  function openModal(id){ document.getElementById(id).classList.add('open'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('[data-close-modal]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      btn.closest('.modal-overlay').classList.remove('open');
+    });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', (e)=>{ if(e.target === ov) ov.classList.remove('open'); });
+  });
+
+  // ---- nav auth state rendering ----
+  function renderAuthArea(){
+    const area = document.getElementById('navAuthArea');
+    const user = DB.currentUser();
+    if(user){
+      area.innerHTML = `<div class="user-chip"><span class="name">🐢 ${user.name.split(' ')[0]}</span><button class="logout-btn" id="logoutBtn">Log out</button></div>`;
+      document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+        if(user.authMethod === 'internet-identity' && window.iiLogout){
+          try{ await window.iiLogout(); }catch(e){ console.warn(e); }
+        }
+        DB.logout(); renderAuthArea(); showToast("Logged out. See you soon!");
+      });
+    } else {
+      area.innerHTML = `<button class="navcta" id="navLoginBtn" type="button">Log in / Sign up</button>`;
+      document.getElementById('navLoginBtn').addEventListener('click', ()=>openAuthModal('login'));
+    }
+  }
+
+  function openAuthModal(tab){
+    document.getElementById('authFormArea').style.display = 'block';
+    document.getElementById('iiProfileArea').style.display = 'none';
+    document.getElementById('authSuccessArea').style.display = 'none';
+    switchAuthTab(tab || 'login');
+    openModal('authModal');
+  }
+
+  function switchAuthTab(tab){
+    const isLogin = tab === 'login';
+    document.getElementById('tabLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('signupForm').style.display = isLogin ? 'none' : 'block';
+  }
+  document.getElementById('tabLogin').addEventListener('click', ()=>switchAuthTab('login'));
+  document.getElementById('tabSignup').addEventListener('click', ()=>switchAuthTab('signup'));
+  document.getElementById('gotoSignup').addEventListener('click', (e)=>{e.preventDefault();switchAuthTab('signup');});
+  document.getElementById('gotoLogin').addEventListener('click', (e)=>{e.preventDefault();switchAuthTab('login');});
+
+  // CTA buttons that open the auth modal
+  ['heroHustleBtn','pathHustleBtn','finalCtaBtn'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', ()=>openAuthModal('signup'));
+  });
+
+  // CTA buttons that open the task modal (require login)
+  function openTaskFlow(){
+    const user = DB.currentUser();
+    if(!user){
+      showToast('Log in or sign up first — then post your task.');
+      openAuthModal('signup');
+      return;
+    }
+    document.getElementById('taskFormArea').style.display = 'block';
+    document.getElementById('taskSuccessArea').style.display = 'none';
+    document.getElementById('taskEmail').value = user.email;
+    openModal('taskModal');
+  }
+  ['heroPostBtn','pathPostBtn'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', openTaskFlow);
+  });
+
+  // ---- signup ----
+  document.getElementById('signupForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const users = DB.users();
+    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    if(users.some(u=>u.email === email)){
+      showToast('An account with that email already exists — try logging in.');
+      switchAuthTab('login');
+      return;
+    }
+    const newUser = {
+      name: document.getElementById('signupName').value.trim(),
+      email,
+      phone: document.getElementById('signupPhone').value.trim(),
+      city: document.getElementById('signupCity').value.trim(),
+      role: document.getElementById('signupRole').value,
+      password: document.getElementById('signupPassword').value, // demo only — never store plain-text passwords in production
+      joined: new Date().toISOString()
+    };
+    users.push(newUser);
+    DB.saveUsers(users);
+    DB.setCurrentUser(newUser);
+    renderAuthArea();
+    await sendToFormspree({form:'signup', ...newUser, password:'(hidden)'});
+
+    document.getElementById('authFormArea').style.display = 'none';
+    document.getElementById('authSuccessArea').style.display = 'block';
+    document.getElementById('authSuccessMsg').textContent = `Welcome, ${newUser.name.split(' ')[0]}! You're logged in and ready to ${newUser.role === 'hustler' ? 'start hustling' : 'post your first task'}.`;
+    e.target.reset();
+  });
+
+  // ---- Internet Identity ----
+  let pendingPrincipal = null;
+
+  document.getElementById('iiLoginBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('iiLoginBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ii-mark">∞</span> Opening Internet Identity…';
+    try{
+      const principal = await window.iiLogin();
+      handleIIPrincipal(principal);
+    }catch(err){
+      showToast(err && err.message ? err.message : 'Internet Identity sign-in was cancelled.');
+    }finally{
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  });
+
+  function handleIIPrincipal(principal){
+    const users = DB.users();
+    const existing = users.find(u => u.principal === principal);
+    if(existing){
+      DB.setCurrentUser(existing);
+      renderAuthArea();
+      document.getElementById('authFormArea').style.display = 'none';
+      document.getElementById('iiProfileArea').style.display = 'none';
+      document.getElementById('authSuccessArea').style.display = 'block';
+      document.getElementById('authSuccessMsg').textContent = `Welcome back, ${existing.name.split(' ')[0]}! Signed in with Internet Identity.`;
+    } else {
+      pendingPrincipal = principal;
+      document.getElementById('authFormArea').style.display = 'none';
+      document.getElementById('iiProfileArea').style.display = 'block';
+      document.getElementById('iiPrincipalNote').textContent = `Principal: ${principal.slice(0,28)}…`;
+    }
+    if(!document.getElementById('authModal').classList.contains('open')) openModal('authModal');
+  }
+
+  document.getElementById('iiProfileForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const users = DB.users();
+    const newUser = {
+      principal: pendingPrincipal,
+      name: document.getElementById('iiName').value.trim(),
+      email: document.getElementById('iiEmail').value.trim(),
+      phone: document.getElementById('iiPhone').value.trim(),
+      city: document.getElementById('iiCity').value.trim(),
+      role: document.getElementById('iiRole').value,
+      authMethod: 'internet-identity',
+      joined: new Date().toISOString()
+    };
+    users.push(newUser);
+    DB.saveUsers(users);
+    DB.setCurrentUser(newUser);
+    renderAuthArea();
+    await sendToFormspree({form:'signup_internet_identity', ...newUser});
+
+    document.getElementById('iiProfileArea').style.display = 'none';
+    document.getElementById('authSuccessArea').style.display = 'block';
+    document.getElementById('authSuccessMsg').textContent = `Welcome, ${newUser.name.split(' ')[0]}! Your Internet Identity is now linked.`;
+    e.target.reset();
+  });
+
+  // If the visitor already has a live Internet Identity session (e.g. they
+  // signed in on a previous visit), quietly restore it on page load.
+  window.addEventListener('ii-already-authenticated', (e)=>{
+    if(DB.currentUser()) return; // don't override an active demo-login session
+    const principal = e.detail;
+    const existing = DB.users().find(u => u.principal === principal);
+    if(existing){
+      DB.setCurrentUser(existing);
+      renderAuthArea();
+    }
+  });
+  window.addEventListener('ii-unavailable', ()=>{
+    const btn = document.getElementById('iiLoginBtn');
+    if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ii-mark">∞</span> Internet Identity unavailable offline'; }
+  });
+  // Belt-and-suspenders: if neither ii-ready nor ii-unavailable fires within
+  // a few seconds (e.g. the CDN is unreachable), don't leave a dead button.
+  setTimeout(()=>{
+    if(!window.iiLogin){
+      const btn = document.getElementById('iiLoginBtn');
+      if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ii-mark">∞</span> Internet Identity unavailable right now'; }
+    }
+  }, 6000);
+
+  // ---- login ----
+  document.getElementById('loginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    const user = DB.users().find(u => u.email === email && u.password === password);
+    if(!user){
+      showToast('No matching account found in this browser. Try signing up.');
+      return;
+    }
+    DB.setCurrentUser(user);
+    renderAuthArea();
+    document.getElementById('authFormArea').style.display = 'none';
+    document.getElementById('authSuccessArea').style.display = 'block';
+    document.getElementById('authSuccessMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+    e.target.reset();
+  });
+
+  // ---- post a task ----
+  document.getElementById('taskForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const user = DB.currentUser();
+    const tasks = DB.tasks();
+    const newTask = {
+      title: document.getElementById('taskTitle').value.trim(),
+      category: document.getElementById('taskCategory').value,
+      budget: document.getElementById('taskBudget').value,
+      location: document.getElementById('taskLocation').value.trim(),
+      details: document.getElementById('taskDetails').value.trim(),
+      contact_email: document.getElementById('taskEmail').value.trim(),
+      posted_by: user ? user.name : '',
+      posted_at: new Date().toISOString()
+    };
+    tasks.push(newTask);
+    DB.saveTasks(tasks);
+    await sendToFormspree({form:'task_post', ...newTask});
+
+    document.getElementById('taskFormArea').style.display = 'none';
+    document.getElementById('taskSuccessArea').style.display = 'block';
+    e.target.reset();
+  });
+
+  // ---- admin CSV export ----
+  document.getElementById('exportUsersBtn').addEventListener('click', ()=>{
+    const rows = DB.users().map(({password, ...rest}) => rest); // never export passwords
+    downloadCSV('turtlehustler_signups.csv', rows);
+  });
+  document.getElementById('exportTasksBtn').addEventListener('click', ()=>{
+    downloadCSV('turtlehustler_tasks.csv', DB.tasks());
+  });
+
+  renderAuthArea();
 </script>
 
 </body>
