@@ -3,1124 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TurtleHustler | Post a Task. Hustle Local. Get Paid.</title>
-<meta name="description" content="TurtleHustler is India's hyperlocal task marketplace. Post a chore, get it done. Or pick up nearby gigs and earn same-day cash.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Quick Uber</title>
 <style>
   :root{
-    --pine:#173226;
-    --pine-deep:#0e2119;
-    --sand:#F3E9D2;
-    --sand-dim:#E7DAB9;
-    --shell:#5C7A5A;
-    --coral:#FF6B4A;
-    --coral-dim:#e85a3c;
-    --ink:#12201A;
-    --line: rgba(243,233,210,0.14);
+    --bg:#0a0a0a;
+    --card:#151515;
+    --accent:#000000;
+    --text:#f5f5f5;
+    --muted:#9a9a9a;
+    --uber-black:#000;
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  *{box-sizing:border-box;}
   body{
-    background:var(--pine);
-    color:var(--sand);
-    font-family:'Inter',sans-serif;
-    line-height:1.5;
-    overflow-x:hidden;
-  }
-  h1,h2,h3,.display{
-    font-family:'Fraunces',serif;
-    font-weight:600;
-    letter-spacing:-0.01em;
-    color:var(--sand);
-  }
-  .mono{font-family:'JetBrains Mono',monospace;}
-  a{color:inherit;text-decoration:none;}
-  img{max-width:100%;display:block;}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
-  @media(max-width:640px){.wrap{padding:0 20px;}}
-
-  /* background hex texture */
-  .hexfield{
-    position:absolute;inset:0;
-    background-image:
-      radial-gradient(circle at 20% 20%, rgba(255,107,74,0.07), transparent 40%),
-      radial-gradient(circle at 85% 60%, rgba(92,122,90,0.15), transparent 45%);
-    pointer-events:none;
-  }
-
-  /* NAV */
-  nav{
-    position:sticky;top:0;z-index:50;
-    background:rgba(23,50,38,0.85);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);
-  }
-  .navrow{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;max-width:1180px;margin:0 auto;}
-  .logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:700;font-size:1.25rem;}
-  .logo .shell-icon{width:30px;height:30px;flex-shrink:0;}
-  .navlinks{display:flex;gap:34px;font-size:0.92rem;font-weight:500;color:var(--sand-dim);}
-  .navlinks a:hover{color:var(--coral);}
-  .navcta{
-    background:var(--coral);color:var(--pine-deep);font-weight:700;
-    padding:11px 22px;border-radius:100px;font-size:0.88rem;
-    box-shadow:0 0 0 0 rgba(255,107,74,0.5);
-    transition:transform .2s ease, box-shadow .2s ease;
-  }
-  .navcta:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,107,74,0.35);}
-  .navtoggle{display:none;background:none;border:none;color:var(--sand);font-size:1.5rem;cursor:pointer;}
-  @media(max-width:820px){
-    .navlinks{display:none;}
-    .navtoggle{display:block;}
-  }
-
-  /* HERO */
-  .hero{position:relative;padding:96px 0 80px;overflow:hidden;}
-  .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;}
-  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;}}
-  .eyebrow{
-    display:inline-flex;align-items:center;gap:8px;
-    font-family:'JetBrains Mono',monospace;font-size:0.78rem;
-    color:var(--coral);border:1px solid rgba(255,107,74,0.35);
-    background:rgba(255,107,74,0.08);
-    padding:7px 14px;border-radius:100px;margin-bottom:26px;
-  }
-  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--coral);animation:pulse 1.8s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-  .hero h1{
-    font-size:clamp(2.6rem,5.6vw,4.3rem);
-    line-height:0.98;
-    font-weight:700;
-  }
-  .hero h1 em{
-    font-style:italic;font-weight:300;color:var(--shell);
-    position:relative;
-  }
-  .hero h1 .strike-through{
-    position:relative; display:inline-block;
-  }
-  .hero p.lede{
-    margin-top:24px;font-size:1.13rem;color:var(--sand-dim);
-    max-width:480px;line-height:1.65;
-  }
-  .hero-ctas{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap;}
-  .btn-primary{
-    background:var(--coral);color:var(--pine-deep);font-weight:700;
-    padding:15px 28px;border-radius:100px;font-size:0.95rem;
-    transition:transform .2s ease, box-shadow .2s ease;
-    box-shadow:0 8px 24px rgba(255,107,74,0.25);
-  }
-  .btn-primary:hover{transform:translateY(-2px);}
-  .btn-ghost{
-    border:1px solid rgba(243,233,210,0.3);
-    padding:15px 28px;border-radius:100px;font-size:0.95rem;font-weight:600;
-    transition:border-color .2s ease, background .2s ease;
-  }
-  .btn-ghost:hover{border-color:var(--sand);background:rgba(243,233,210,0.06);}
-  .hero-proof{margin-top:44px;display:flex;gap:34px;flex-wrap:wrap;}
-  .hero-proof div{font-family:'JetBrains Mono',monospace;}
-  .hero-proof .num{font-size:1.5rem;color:var(--coral);font-weight:600;display:block;}
-  .hero-proof .lbl{font-size:0.75rem;color:var(--sand-dim);letter-spacing:0.02em;}
-
-  /* Hero visual: shell hex map */
-  .hero-visual{position:relative;aspect-ratio:1/1;max-width:460px;justify-self:center;}
-  .shellmap{width:100%;height:100%;}
-  .shellmap .cell{fill:var(--pine-deep);stroke:rgba(243,233,210,0.1);stroke-width:1;transition:fill .3s ease;}
-  .shellmap .cell.lit{fill:rgba(92,122,90,0.5);}
-  .shellmap .cell.hot{fill:var(--coral);}
-  .pin{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 6px rgba(255,107,74,0.18);}
-  .pin::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--coral);animation:ring 2s infinite;}
-  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,107,74,0.5);}100%{box-shadow:0 0 0 16px rgba(255,107,74,0);}}
-
-  /* STATS STRIP */
-  .stripbar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .stripbar .wrap{display:flex;justify-content:space-between;padding:26px 32px;flex-wrap:wrap;gap:18px;}
-  .stripbar .item{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--sand-dim);}
-  .stripbar .item b{color:var(--sand);font-weight:600;}
-
-  /* SECTION HEADS */
-  .section{padding:100px 0;}
-  .section-head{max-width:600px;margin-bottom:56px;}
-  .kicker{
-    font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--coral);
-    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;display:block;
-  }
-  .section-head h2{font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.1;}
-  .section-head p{color:var(--sand-dim);margin-top:16px;font-size:1.03rem;max-width:520px;}
-
-  /* TWO PATHS */
-  .paths{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
-  @media(max-width:820px){.paths{grid-template-columns:1fr;}}
-  .path-card{
-    background:var(--pine-deep);
-    border:1px solid var(--line);
-    border-radius:22px;
-    padding:38px;
-    position:relative;
-    overflow:hidden;
-    transition:border-color .25s ease, transform .25s ease;
-  }
-  .path-card:hover{border-color:rgba(255,107,74,0.4);transform:translateY(-3px);}
-  .path-card .tag{
-    font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--shell);
-    text-transform:uppercase;letter-spacing:0.08em;
-  }
-  .path-card h3{font-size:1.7rem;margin-top:10px;margin-bottom:14px;}
-  .path-card p{color:var(--sand-dim);font-size:0.97rem;margin-bottom:22px;}
-  .path-card ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:26px;}
-  .path-card li{font-size:0.9rem;color:var(--sand-dim);display:flex;gap:10px;align-items:flex-start;}
-  .path-card li::before{content:'▸';color:var(--coral);flex-shrink:0;}
-  .path-card .cardlink{font-weight:700;font-size:0.9rem;color:var(--coral);display:inline-flex;align-items:center;gap:6px;}
-  .path-card .cardlink:hover{gap:10px;transition:gap .2s ease;}
-  .path-card.coral-card{background:linear-gradient(160deg, rgba(255,107,74,0.14), var(--pine-deep) 60%);}
-
-  /* HOW IT WORKS */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;}
-  @media(max-width:820px){.steps{grid-template-columns:1fr;}}
-  .step{padding:0 28px 0 0;position:relative;}
-  .step:not(:last-child)::after{
-    content:'';position:absolute;top:22px;right:0;width:100%;height:1px;
-    background:repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 12px);
-  }
-  @media(max-width:820px){.step:not(:last-child)::after{display:none;}.step{padding:0 0 40px 0;}}
-  .step .stepnum{font-family:'Fraunces',serif;font-size:2.6rem;color:transparent;-webkit-text-stroke:1.4px var(--coral);margin-bottom:18px;display:block;}
-  .step h3{font-size:1.2rem;margin-bottom:10px;}
-  .step p{color:var(--sand-dim);font-size:0.92rem;}
-
-  /* CATEGORIES */
-  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-  @media(max-width:900px){.cat-grid{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:480px){.cat-grid{grid-template-columns:1fr;}}
-  .cat{
-    background:var(--pine-deep);border:1px solid var(--line);border-radius:16px;
-    padding:24px 20px;
-    clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%);
-    text-align:center;
-    transition:background .25s ease, transform .25s ease;
-  }
-  .cat:hover{background:rgba(255,107,74,0.1);transform:scale(1.03);}
-  .cat .ico{font-size:1.6rem;margin-bottom:10px;}
-  .cat span{display:block;font-size:0.88rem;font-weight:600;color:var(--sand);}
-  .cat small{display:block;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--sand-dim);margin-top:4px;}
-
-  /* SOCIAL PROOF / QUOTE */
-  .quote-band{background:var(--pine-deep);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .quote-band .wrap{padding:90px 32px;text-align:center;max-width:760px;}
-  .quote-band blockquote{
-    font-family:'Fraunces',serif;font-style:italic;font-weight:300;
-    font-size:clamp(1.4rem,3vw,2.1rem);line-height:1.4;color:var(--sand);
-  }
-  .quote-band cite{display:block;margin-top:28px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--shell);font-style:normal;}
-
-  /* FAQ */
-  .faq-item{border-bottom:1px solid var(--line);}
-  .faq-q{
-    width:100%;text-align:left;background:none;border:none;color:var(--sand);
-    padding:24px 0;display:flex;justify-content:space-between;align-items:center;
-    font-family:'Fraunces',serif;font-size:1.12rem;cursor:pointer;gap:20px;
-  }
-  .faq-q .plus{font-family:'JetBrains Mono',monospace;color:var(--coral);font-size:1.3rem;transition:transform .25s ease;flex-shrink:0;}
-  .faq-item.open .plus{transform:rotate(45deg);}
-  .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;}
-  .faq-item.open .faq-a{max-height:200px;}
-  .faq-a p{padding-bottom:24px;color:var(--sand-dim);font-size:0.95rem;max-width:640px;line-height:1.6;}
-
-  /* FINAL CTA */
-  .final-cta{
-    position:relative;
-    background:linear-gradient(160deg, var(--pine-deep), #0a1a13);
-    border-radius:28px;
-    margin:0 32px 100px;
-    padding:80px 40px;
-    text-align:center;
-    overflow:hidden;
-    border:1px solid var(--line);
-  }
-  .final-cta h2{font-size:clamp(2rem,4.4vw,3.2rem);max-width:700px;margin:0 auto 20px;}
-  .final-cta p{color:var(--sand-dim);margin-bottom:36px;font-size:1.05rem;}
-  .final-cta .btn-primary{font-size:1rem;padding:17px 34px;}
-
-  /* FOOTER */
-  footer{border-top:1px solid var(--line);padding:56px 0 40px;}
-  .foot-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:40px;margin-bottom:48px;}
-  .foot-brand .logo{margin-bottom:14px;}
-  .foot-brand p{color:var(--sand-dim);font-size:0.88rem;max-width:260px;}
-  .foot-col h4{font-family:'JetBrains Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--shell);margin-bottom:16px;}
-  .foot-col a{display:block;font-size:0.9rem;color:var(--sand-dim);margin-bottom:10px;}
-  .foot-col a:hover{color:var(--coral);}
-  .foot-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);padding-top:24px;font-size:0.8rem;color:var(--sand-dim);font-family:'JetBrains Mono',monospace;}
-
-  ::selection{background:var(--coral);color:var(--pine-deep);}
-  :focus-visible{outline:2px solid var(--coral);outline-offset:3px;}
-
-  @media (prefers-reduced-motion: reduce){
-    *{animation:none !important;transition:none !important;}
-  }
-
-  /* ===== MODALS ===== */
-  .modal-overlay{
-    position:fixed;inset:0;z-index:200;
-    background:rgba(10,20,15,0.72);
-    backdrop-filter:blur(4px);
-    display:none;align-items:center;justify-content:center;
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     padding:24px;
   }
-  .modal-overlay.open{display:flex;}
-  .modal-box{
-    background:var(--pine-deep);
-    border:1px solid var(--line);
-    border-radius:22px;
-    width:100%;max-width:440px;
-    padding:38px;
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:16px;
+    padding:28px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    border:1px solid #262626;
+  }
+  h1{
+    font-size:22px;
+    margin:0 0 4px;
+    letter-spacing:-0.02em;
+  }
+  p.sub{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 24px;
+  }
+  .status{
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:#1e1e1e;
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--muted);
+    flex-shrink:0;
+  }
+  .dot.ok{background:#2ecc71;}
+  .dot.err{background:#e74c3c;}
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .search-wrap{
     position:relative;
-    max-height:88vh;overflow-y:auto;
-    animation:modalIn .22s ease;
+    margin-bottom:18px;
   }
-  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
-  .modal-close{
-    position:absolute;top:18px;right:18px;
-    background:none;border:none;color:var(--sand-dim);
-    font-size:1.4rem;cursor:pointer;line-height:1;
-    width:32px;height:32px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    transition:background .2s ease, color .2s ease;
+  input[type="text"]{
+    width:100%;
+    padding:14px 14px;
+    border-radius:12px;
+    border:1px solid #333;
+    background:#0f0f0f;
+    color:var(--text);
+    font-size:15px;
+    outline:none;
   }
-  .modal-close:hover{background:rgba(243,233,210,0.08);color:var(--sand);}
-  .modal-box h3{font-size:1.5rem;margin-bottom:6px;}
-  .modal-sub{color:var(--sand-dim);font-size:0.88rem;margin-bottom:26px;}
-  .tabs{display:flex;gap:4px;background:rgba(0,0,0,0.2);border-radius:100px;padding:4px;margin-bottom:26px;}
-  .tab-btn{
-    flex:1;background:none;border:none;color:var(--sand-dim);
-    padding:9px 0;border-radius:100px;font-size:0.85rem;font-weight:600;
-    cursor:pointer;transition:background .2s ease, color .2s ease;
-    font-family:'Inter',sans-serif;
+  input[type="text"]:focus{
+    border-color:#555;
   }
-  .tab-btn.active{background:var(--coral);color:var(--pine-deep);}
-  .field{margin-bottom:16px;}
-  .field label{display:block;font-size:0.8rem;color:var(--sand-dim);margin-bottom:7px;font-family:'JetBrains Mono',monospace;}
-  .field input,.field select,.field textarea{
-    width:100%;background:rgba(243,233,210,0.06);
-    border:1px solid var(--line);border-radius:10px;
-    padding:12px 14px;color:var(--sand);font-size:0.92rem;
-    font-family:'Inter',sans-serif;
-    transition:border-color .2s ease, background .2s ease;
+  .suggestions{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;right:0;
+    background:#1c1c1c;
+    border:1px solid #333;
+    border-radius:12px;
+    overflow:hidden;
+    z-index:10;
+    max-height:220px;
+    overflow-y:auto;
+    display:none;
   }
-  .field input:focus,.field select:focus,.field textarea:focus{
-    outline:none;border-color:var(--coral);background:rgba(243,233,210,0.1);
+  .suggestions div{
+    padding:12px 14px;
+    font-size:14px;
+    cursor:pointer;
+    border-bottom:1px solid #2a2a2a;
   }
-  .field textarea{resize:vertical;min-height:80px;}
-  .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23E7DAB9' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
-  .form-submit{
-    width:100%;background:var(--coral);color:var(--pine-deep);
-    font-weight:700;border:none;border-radius:100px;
-    padding:14px 0;font-size:0.95rem;cursor:pointer;margin-top:6px;
-    transition:transform .2s ease, box-shadow .2s ease;
-    font-family:'Inter',sans-serif;
+  .suggestions div:last-child{border-bottom:none;}
+  .suggestions div:hover{background:#262626;}
+  button.book{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:12px;
+    background:#fff;
+    color:#000;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity .15s;
   }
-  .form-submit:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,107,74,0.3);}
-  .form-note{font-size:0.76rem;color:var(--sand-dim);margin-top:14px;text-align:center;line-height:1.5;}
-  .form-switch{font-size:0.85rem;color:var(--sand-dim);text-align:center;margin-top:18px;}
-  .form-switch a{color:var(--coral);font-weight:600;}
-  .success-box{text-align:center;padding:20px 0;}
-  .success-box .checkmark{font-size:2.6rem;margin-bottom:14px;}
-  .success-box h3{margin-bottom:10px;}
-  .success-box p{color:var(--sand-dim);font-size:0.92rem;margin-bottom:24px;}
-
-  /* nav auth state */
-  .user-chip{display:flex;align-items:center;gap:12px;}
-  .user-chip .name{font-size:0.88rem;font-weight:600;color:var(--sand);font-family:'JetBrains Mono',monospace;}
-  .user-chip .logout-btn{
-    background:none;border:1px solid var(--line);color:var(--sand-dim);
-    padding:8px 16px;border-radius:100px;font-size:0.78rem;cursor:pointer;
-    transition:border-color .2s ease, color .2s ease;
-    font-family:'Inter',sans-serif;
+  button.book:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
   }
-  .user-chip .logout-btn:hover{border-color:var(--coral);color:var(--coral);}
-
-  /* toast */
-  .toast{
-    position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:var(--sand);color:var(--pine-deep);
-    padding:14px 24px;border-radius:100px;font-size:0.88rem;font-weight:600;
-    z-index:300;opacity:0;pointer-events:none;
-    transition:opacity .25s ease, transform .25s ease;
-    box-shadow:0 12px 30px rgba(0,0,0,0.3);
+  button.book:active:not(:disabled){opacity:0.8;}
+  .note{
+    margin-top:14px;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.5;
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  /* admin export bar */
-  .admin-bar{
-    background:rgba(0,0,0,0.2);border:1px dashed var(--line);
-    border-radius:14px;padding:18px 22px;margin-top:16px;
-    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-  }
-  .admin-bar span{font-size:0.82rem;color:var(--sand-dim);}
-  .admin-bar .exportbtn{
-    background:none;border:1px solid var(--shell);color:var(--sand);
-    padding:9px 18px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;
-    font-family:'JetBrains Mono',monospace;
-    transition:background .2s ease;
-  }
-  .admin-bar .exportbtn:hover{background:rgba(92,122,90,0.2);}
-
-  /* Internet Identity */
-  .ii-btn{
-    background:linear-gradient(135deg,#5B2FE8,#3B00B9);
-    color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;
-    box-shadow:0 6px 18px rgba(91,47,232,0.3);
-  }
-  .ii-btn:hover{box-shadow:0 8px 22px rgba(91,47,232,0.45);}
-  .ii-btn:disabled{opacity:0.6;cursor:wait;}
-  .ii-mark{font-size:1.15rem;line-height:1;}
-  .ii-caption{font-size:0.76rem;color:var(--sand-dim);text-align:center;margin-top:10px;}
-  .or-divider{
-    display:flex;align-items:center;gap:12px;margin:24px 0;
-    color:var(--sand-dim);font-size:0.76rem;font-family:'JetBrains Mono',monospace;
-    text-transform:uppercase;letter-spacing:0.04em;
-  }
-  .or-divider span{flex:1;height:1px;background:var(--line);}
 </style>
 </head>
 <body>
+  <div class="card">
+    <h1>Quick Uber</h1>
+    <p class="sub">Pickup uses your current location. Search a destination, tap Book — it opens Uber ready to request.</p>
 
-<nav>
-  <div class="navrow">
-    <a class="logo" href="#top">
-      <svg class="shell-icon" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="19" stroke="#FF6B4A" stroke-width="1.5"/>
-        <path d="M20 6 L32 13 V27 L20 34 L8 27 V13 Z" stroke="#F3E9D2" stroke-width="1.2" fill="none"/>
-        <path d="M20 6 V34 M8 13 L32 27 M32 13 L8 27" stroke="#5C7A5A" stroke-width="1"/>
-      </svg>
-      turtlehustler
-    </a>
-    <div class="navlinks">
-      <a href="#how">How it works</a>
-      <a href="#paths">For you</a>
-      <a href="#categories">Task types</a>
-      <a href="#faq">FAQ</a>
+    <div class="status" id="locStatus">
+      <div class="dot" id="locDot"></div>
+      <span id="locText">Detecting your location…</span>
     </div>
-    <div id="navAuthArea">
-      <button class="navcta" id="navLoginBtn" type="button">Log in / Sign up</button>
-    </div>
-    <button class="navtoggle" id="navToggle" aria-label="Toggle menu">☰</button>
-  </div>
-</nav>
 
-<header class="hero" id="top">
-  <div class="hexfield"></div>
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow"><span class="dot"></span>LIVE ACROSS 40+ INDIAN CITIES</span>
-      <h1>Slow shell.<br><em>Fast</em> hustle.</h1>
-      <p class="lede">Post the task you don't have time for, or pick up one nearby and get paid same day. TurtleHustler connects busy people with local hustlers — no middlemen, no waiting around.</p>
-      <div class="hero-ctas">
-        <button class="btn-primary" type="button" id="heroPostBtn">Post a task</button>
-        <button class="btn-ghost" type="button" id="heroHustleBtn">Start hustling</button>
-      </div>
-      <div class="hero-proof">
-        <div><span class="num">12,400+</span><span class="lbl">ACTIVE HUSTLERS</span></div>
-        <div><span class="num">₹38L+</span><span class="lbl">PAID OUT MONTHLY</span></div>
-        <div><span class="num">18 min</span><span class="lbl">AVG. TASK MATCH TIME</span></div>
-      </div>
+    <label for="dest">Destination</label>
+    <div class="search-wrap">
+      <input type="text" id="dest" placeholder="Type an address or place…" autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
     </div>
-    <div class="hero-visual">
-      <svg class="shellmap" viewBox="0 0 400 400" id="shellSvg"></svg>
-      <div class="pin" style="top:28%;left:38%;"></div>
-      <div class="pin" style="top:62%;left:64%;background:#5C7A5A;box-shadow:0 0 0 6px rgba(92,122,90,0.18);"></div>
+
+    <button class="book" id="bookBtn" disabled>Book Uber</button>
+
+    <div class="note">
+      Tapping Book opens the Uber app (or uber.com) with pickup and drop-off already filled in — you still confirm the ride inside Uber. Location search powered by OpenStreetMap.
     </div>
   </div>
-</header>
-
-<div class="stripbar">
-  <div class="wrap">
-    <div class="item">🐢 <b>NO SIGN-UP FEE</b> for posters</div>
-    <div class="item">⚡ <b>SAME-DAY PAYOUTS</b> for hustlers</div>
-    <div class="item">🛡️ <b>VERIFIED PROFILES</b> only</div>
-    <div class="item">📍 <b>HYPERLOCAL</b> — under 5km, mostly</div>
-  </div>
-</div>
-
-<section class="section" id="paths">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">Two sides, one shell</span>
-      <h2>Built for whichever hustle you're on</h2>
-      <p>Whether you're short on time or short on cash, TurtleHustler's the same app — just a different door in.</p>
-    </div>
-    <div class="paths">
-      <div class="path-card">
-        <span class="tag">For task posters</span>
-        <h3>Offload your to-do list</h3>
-        <p>Groceries, a leaky tap, moving boxes, a spreadsheet that needs fixing by tonight — post it in under a minute and watch offers roll in from hustlers near you.</p>
-        <ul>
-          <li>Set your own price or accept bids</li>
-          <li>Chat and confirm before anyone shows up</li>
-          <li>Pay only when the task's marked done</li>
-        </ul>
-        <button class="cardlink" type="button" id="pathPostBtn" style="background:none;border:none;cursor:pointer;font-family:inherit;">Post your first task →</button>
-      </div>
-      <div class="path-card coral-card">
-        <span class="tag">For hustlers</span>
-        <h3>Turn free hours into cash</h3>
-        <p>Browse tasks going up nearby right now, claim the ones that fit your skills and schedule, and get paid the moment the poster confirms — no invoicing, no waiting for payday.</p>
-        <ul>
-          <li>Filter by distance, payout, or category</li>
-          <li>Build a rating that gets you better tasks</li>
-          <li>Cash out same day, straight to UPI</li>
-        </ul>
-        <button class="cardlink" type="button" id="pathHustleBtn" style="background:none;border:none;cursor:pointer;font-family:inherit;">Sign up as a hustler →</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="how" style="padding-top:0;">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">The route</span>
-      <h2>Three steps, either direction</h2>
-      <p>The shell moves slow. The hustle doesn't have to.</p>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <span class="stepnum">01</span>
-        <h3>Post it or find it</h3>
-        <p>Describe the task and set a budget, or scan the live map for gigs within your radius.</p>
-      </div>
-      <div class="step">
-        <span class="stepnum">02</span>
-        <h3>Match and confirm</h3>
-        <p>Chat in-app, agree on details, and lock in a time — both sides see verified ratings first.</p>
-      </div>
-      <div class="step">
-        <span class="stepnum">03</span>
-        <h3>Done, paid, rated</h3>
-        <p>Mark it complete, release payment instantly, and leave a rating that builds trust for next time.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="categories" style="padding-top:0;">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">What's going up today</span>
-      <h2>Task types hustlers are claiming right now</h2>
-    </div>
-    <div class="cat-grid">
-      <div class="cat"><div class="ico">🛒</div><span>Grocery & errands</span><small>~₹150–400</small></div>
-      <div class="cat"><div class="ico">🧹</div><span>Home cleaning</span><small>~₹300–800</small></div>
-      <div class="cat"><div class="ico">📦</div><span>Moving & delivery</span><small>~₹250–1200</small></div>
-      <div class="cat"><div class="ico">🔧</div><span>Repairs & fixes</span><small>~₹200–900</small></div>
-      <div class="cat"><div class="ico">💻</div><span>Coding & tech help</span><small>~₹500–3000</small></div>
-      <div class="cat"><div class="ico">📚</div><span>Tutoring</span><small>~₹300–700/hr</small></div>
-      <div class="cat"><div class="ico">🐾</div><span>Pet care</span><small>~₹200–500</small></div>
-      <div class="cat"><div class="ico">📄</div><span>Paperwork runs</span><small>~₹150–450</small></div>
-    </div>
-  </div>
-</section>
-
-<div class="quote-band">
-  <div class="wrap">
-    <blockquote>"I posted a task to assemble furniture on a Tuesday night. Someone was at my door by Wednesday lunch. Didn't have to call a single 'expert' shop."</blockquote>
-    <cite>— A task poster, Kochi</cite>
-  </div>
-</div>
-
-<section class="section" id="faq">
-  <div class="wrap" style="max-width:760px;">
-    <div class="section-head">
-      <span class="kicker">Before you dive in</span>
-      <h2>Common questions</h2>
-    </div>
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-q">How fast can I start earning? <span class="plus">+</span></button>
-        <div class="faq-a"><p>Sign up, verify your phone number and ID, and you can claim your first task within minutes — most hustlers get their first match the same day.</p></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q">Is payment actually secure? <span class="plus">+</span></button>
-        <div class="faq-a"><p>Posters fund the task upfront and it's held until the work is confirmed done. Hustlers get paid out straight to UPI the moment it's released — no chasing anyone for money.</p></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q">Can I post literally any task? <span class="plus">+</span></button>
-        <div class="faq-a"><p>Most legal, local, day-to-day work is fair game. A few categories need extra verification (home entry, childcare, high-value deliveries) to keep both sides safe.</p></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q">What's TurtleHustler's cut? <span class="plus">+</span></button>
-        <div class="faq-a"><p>Posting is free. A small service fee is taken from the task payout, shown upfront before a hustler accepts — no surprise deductions later.</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="final-cta">
-  <div class="hexfield"></div>
-  <h2>Ready to move at hustle speed?</h2>
-  <p>Join thousands posting and completing tasks across India, every single day.</p>
-  <button class="btn-primary" type="button" id="finalCtaBtn" style="border:none;cursor:pointer;">Launch TurtleHustler</button>
-</div>
-
-<footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <a class="logo" href="#top">
-          <svg class="shell-icon" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="19" stroke="#FF6B4A" stroke-width="1.5"/>
-            <path d="M20 6 L32 13 V27 L20 34 L8 27 V13 Z" stroke="#F3E9D2" stroke-width="1.2" fill="none"/>
-          </svg>
-          turtlehustler
-        </a>
-        <p>India's hyperlocal task marketplace — post it, or hustle it.</p>
-      </div>
-      <div class="foot-col">
-        <h4>Platform</h4>
-        <a href="#paths">Post a task</a>
-        <a href="#paths">Start earning</a>
-        <a href="#categories">Task types</a>
-      </div>
-      <div class="foot-col">
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Terms</a>
-        <a href="#">Privacy</a>
-      </div>
-      <div class="foot-col">
-        <h4>Social</h4>
-        <a href="#">Instagram</a>
-        <a href="#">YouTube</a>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>© 2026 TurtleHustler</span>
-      <span>Slow shell. Fast hustle.</span>
-    </div>
-    <div class="admin-bar">
-      <span>🐢 Site owner tools — export everything collected through the forms on this page.</span>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="exportbtn" id="exportUsersBtn" type="button">Export signups (.csv)</button>
-        <button class="exportbtn" id="exportTasksBtn" type="button">Export tasks (.csv)</button>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<!-- ===== AUTH MODAL ===== -->
-<div class="modal-overlay" id="authModal">
-  <div class="modal-box">
-    <button class="modal-close" data-close-modal>&times;</button>
-    <div id="authFormArea">
-      <button type="button" id="iiLoginBtn" class="form-submit ii-btn">
-        <span class="ii-mark">∞</span> Continue with Internet Identity
-      </button>
-      <p class="ii-caption">Passwordless sign-in secured by the Internet Computer — no password stored anywhere.</p>
-      <div class="or-divider"><span></span>or use email<span></span></div>
-
-      <div class="tabs">
-        <button class="tab-btn active" id="tabLogin" type="button">Log in</button>
-        <button class="tab-btn" id="tabSignup" type="button">Sign up</button>
-      </div>
-
-      <form id="loginForm">
-        <h3>Welcome back</h3>
-        <p class="modal-sub">Log in to post a task or manage your hustles.</p>
-        <div class="field"><label>Email</label><input type="email" required id="loginEmail" placeholder="you@example.com"></div>
-        <div class="field"><label>Password</label><input type="password" required id="loginPassword" placeholder="••••••••"></div>
-        <button class="form-submit" type="submit">Log in</button>
-        <p class="form-note">Demo login — stored in this browser only. No account yet? <a href="#" id="gotoSignup" style="color:var(--coral);font-weight:600;">Sign up</a></p>
-      </form>
-
-      <form id="signupForm" style="display:none;">
-        <h3>Create your account</h3>
-        <p class="modal-sub">Takes about 30 seconds.</p>
-        <div class="field"><label>Full name</label><input type="text" required id="signupName" placeholder="Your name"></div>
-        <div class="field"><label>Email</label><input type="email" required id="signupEmail" placeholder="you@example.com"></div>
-        <div class="field"><label>Phone</label><input type="tel" required id="signupPhone" placeholder="98765 43210"></div>
-        <div class="field"><label>City</label><input type="text" required id="signupCity" placeholder="Kochi"></div>
-        <div class="field"><label>I want to</label>
-          <select id="signupRole">
-            <option value="poster">Post tasks</option>
-            <option value="hustler">Complete tasks & earn</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
-        <div class="field"><label>Password</label><input type="password" required id="signupPassword" placeholder="Create a password"></div>
-        <button class="form-submit" type="submit">Create account</button>
-        <p class="form-note">Already have an account? <a href="#" id="gotoLogin" style="color:var(--coral);font-weight:600;">Log in</a></p>
-      </form>
-    </div>
-
-    <div id="iiProfileArea" style="display:none;">
-      <h3>Complete your profile</h3>
-      <p class="modal-sub">Signed in with Internet Identity — just need a couple more details to get you set up.</p>
-      <form id="iiProfileForm">
-        <div class="field"><label>Full name</label><input type="text" required id="iiName" placeholder="Your name"></div>
-        <div class="field"><label>Contact email (optional)</label><input type="email" id="iiEmail" placeholder="you@example.com"></div>
-        <div class="field"><label>Phone</label><input type="tel" required id="iiPhone" placeholder="98765 43210"></div>
-        <div class="field"><label>City</label><input type="text" required id="iiCity" placeholder="Kochi"></div>
-        <div class="field"><label>I want to</label>
-          <select id="iiRole">
-            <option value="poster">Post tasks</option>
-            <option value="hustler">Complete tasks & earn</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
-        <button class="form-submit" type="submit">Save & continue</button>
-        <p class="form-note mono" id="iiPrincipalNote" style="word-break:break-all;"></p>
-      </form>
-    </div>
-
-    <div id="authSuccessArea" class="success-box" style="display:none;">
-      <div class="checkmark">🐢</div>
-      <h3>You're in!</h3>
-      <p id="authSuccessMsg">Account created and logged in.</p>
-      <button class="form-submit" data-close-modal type="button">Continue</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== POST TASK MODAL ===== -->
-<div class="modal-overlay" id="taskModal">
-  <div class="modal-box">
-    <button class="modal-close" data-close-modal>&times;</button>
-    <div id="taskFormArea">
-      <h3>Post a task</h3>
-      <p class="modal-sub">We'll notify nearby hustlers the moment this goes live.</p>
-      <form id="taskForm">
-        <div class="field"><label>Task title</label><input type="text" required id="taskTitle" placeholder="e.g. Assemble a study table"></div>
-        <div class="field"><label>Category</label>
-          <select id="taskCategory">
-            <option>Grocery & errands</option>
-            <option>Home cleaning</option>
-            <option>Moving & delivery</option>
-            <option>Repairs & fixes</option>
-            <option>Coding & tech help</option>
-            <option>Tutoring</option>
-            <option>Pet care</option>
-            <option>Paperwork runs</option>
-          </select>
-        </div>
-        <div class="field"><label>Budget (₹)</label><input type="number" required id="taskBudget" placeholder="500"></div>
-        <div class="field"><label>Location / area</label><input type="text" required id="taskLocation" placeholder="e.g. Kadavanthra, Kochi"></div>
-        <div class="field"><label>Details</label><textarea id="taskDetails" placeholder="What needs doing?"></textarea></div>
-        <div class="field"><label>Your contact email</label><input type="email" required id="taskEmail" placeholder="you@example.com"></div>
-        <button class="form-submit" type="submit">Post this task</button>
-        <p class="form-note">Saved to this browser, and emailed to the TurtleHustler team if Formspree is connected.</p>
-      </form>
-    </div>
-    <div id="taskSuccessArea" class="success-box" style="display:none;">
-      <div class="checkmark">✅</div>
-      <h3>Task posted</h3>
-      <p>Hustlers nearby can see it now. We'll email you as offers come in.</p>
-      <button class="form-submit" data-close-modal type="button">Done</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<!-- Internet Identity bridge: loads @dfinity/auth-client and exposes
-     window.iiLogin() / window.iiLogout() for the rest of the page to use. -->
-<script type="module">
-  import { AuthClient } from "https://esm.sh/@dfinity/auth-client@2.4.1";
-
-  let authClient = null;
-  let ready = false;
-
-  async function init(){
-    try{
-      authClient = await AuthClient.create();
-      ready = true;
-      window.dispatchEvent(new Event('ii-ready'));
-      if(await authClient.isAuthenticated()){
-        const principal = authClient.getIdentity().getPrincipal().toText();
-        window.dispatchEvent(new CustomEvent('ii-already-authenticated', {detail: principal}));
-      }
-    }catch(e){
-      console.warn('Internet Identity failed to initialize', e);
-      window.dispatchEvent(new Event('ii-unavailable'));
-    }
-  }
-
-  window.iiLogin = function(){
-    return new Promise((resolve, reject)=>{
-      if(!ready || !authClient){ reject(new Error('Internet Identity is still loading — try again in a second.')); return; }
-      authClient.login({
-        identityProvider: 'https://identity.ic0.app',
-        maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000), // 7 days
-        onSuccess: () => resolve(authClient.getIdentity().getPrincipal().toText()),
-        onError: (err) => reject(err || new Error('Sign-in was cancelled.'))
-      });
-    });
-  };
-
-  window.iiLogout = async function(){
-    if(authClient) await authClient.logout();
-  };
-
-  init();
-</script>
 
 <script>
-  // Build hex-shell map in hero
-  (function(){
-    const svg = document.getElementById('shellSvg');
-    const cols = 6, rows = 6, r = 32, w = Math.sqrt(3)*r, h = 1.5*r;
-    let litSet = new Set(['2-2','3-2','2-3','4-3','1-4','3-1']);
-    let hotSet = new Set(['2-2','4-3']);
-    let svgHTML = '';
-    for(let row=0; row<rows; row++){
-      for(let col=0; col<cols; col++){
-        const x = col*w + (row%2 ? w/2 : 0) + 40;
-        const y = row*h + 40;
-        if(x > 380 || y > 380) continue;
-        const pts = [];
-        for(let i=0;i<6;i++){
-          const ang = Math.PI/180 * (60*i - 30);
-          pts.push((x+r*Math.cos(ang)).toFixed(1)+','+(y+r*Math.sin(ang)).toFixed(1));
-        }
-        const key = col+'-'+row;
-        let cls = 'cell';
-        if(hotSet.has(key)) cls += ' hot';
-        else if(litSet.has(key)) cls += ' lit';
-        svgHTML += `<polygon class="${cls}" points="${pts.join(' ')}" />`;
-      }
-    }
-    svg.innerHTML = svgHTML;
-  })();
+  let pickup = null;   // { lat, lng }
+  let dropoff = null;  // { lat, lng, label }
 
-  // Mobile nav toggle
-  document.getElementById('navToggle').addEventListener('click', function(){
-    const links = document.querySelector('.navlinks');
-    const isOpen = links.style.display === 'flex';
-    links.style.display = isOpen ? 'none' : 'flex';
-    links.style.flexDirection = 'column';
-    links.style.position = 'absolute';
-    links.style.top = '64px';
-    links.style.left = '0';
-    links.style.right = '0';
-    links.style.background = 'rgba(14,33,25,0.98)';
-    links.style.padding = '20px 32px';
-    links.style.gap = '18px';
-  });
+  const locDot = document.getElementById('locDot');
+  const locText = document.getElementById('locText');
+  const destInput = document.getElementById('dest');
+  const suggestionsBox = document.getElementById('suggestions');
+  const bookBtn = document.getElementById('bookBtn');
 
-  // FAQ accordion
-  document.querySelectorAll('.faq-item').forEach(item=>{
-    item.querySelector('.faq-q').addEventListener('click', ()=>{
-      const wasOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
-      if(!wasOpen) item.classList.add('open');
-    });
-  });
-
-  /* =========================================================
-     TurtleHustler demo backend
-     - Accounts + tasks are stored in THIS BROWSER only
-       (localStorage). There's no server, so this is a working
-       prototype, not real multi-user auth or storage.
-     - To also get an EMAIL for every signup/task, sign up free
-       at https://formspree.io, create a form, and paste your
-       endpoint into FORMSPREE_ENDPOINT below.
-     ========================================================= */
-  const FORMSPREE_ENDPOINT = "https://formspree.io/f/xojgewbg";
-
-  const DB = {
-    users: () => JSON.parse(localStorage.getItem('th_users') || '[]'),
-    saveUsers: (u) => localStorage.setItem('th_users', JSON.stringify(u)),
-    tasks: () => JSON.parse(localStorage.getItem('th_tasks') || '[]'),
-    saveTasks: (t) => localStorage.setItem('th_tasks', JSON.stringify(t)),
-    currentUser: () => JSON.parse(localStorage.getItem('th_current') || 'null'),
-    setCurrentUser: (u) => localStorage.setItem('th_current', JSON.stringify(u)),
-    logout: () => localStorage.removeItem('th_current'),
-  };
-
-  function showToast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2800);
+  function updateBookState(){
+    bookBtn.disabled = !(pickup && dropoff);
   }
 
-  async function sendToFormspree(payload){
-    if(!FORMSPREE_ENDPOINT) return;
+  // 1. Get current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        locDot.classList.add('ok');
+        locText.textContent = 'Location detected';
+        updateBookState();
+      },
+      err => {
+        locDot.classList.add('err');
+        locText.textContent = 'Location blocked — enable it in your browser settings';
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  } else {
+    locDot.classList.add('err');
+    locText.textContent = 'Geolocation not supported by this browser';
+  }
+
+  // 2. Destination search (debounced) via Nominatim (OpenStreetMap)
+  let debounceTimer;
+  destInput.addEventListener('input', () => {
+    dropoff = null;
+    updateBookState();
+    clearTimeout(debounceTimer);
+    const q = destInput.value.trim();
+    if (q.length < 3) {
+      suggestionsBox.style.display = 'none';
+      return;
+    }
+    debounceTimer = setTimeout(() => searchPlaces(q), 350);
+  });
+
+  async function searchPlaces(query){
     try{
-      await fetch(FORMSPREE_ENDPOINT, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body: JSON.stringify(payload)
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+      const results = await res.json();
+      renderSuggestions(results);
+    }catch(e){
+      suggestionsBox.style.display = 'none';
+    }
+  }
+
+  function renderSuggestions(results){
+    suggestionsBox.innerHTML = '';
+    if (!results.length){
+      suggestionsBox.style.display = 'none';
+      return;
+    }
+    results.forEach(r => {
+      const div = document.createElement('div');
+      div.textContent = r.display_name;
+      div.addEventListener('click', () => {
+        dropoff = { lat: parseFloat(r.lat), lng: parseFloat(r.lon), label: r.display_name };
+        destInput.value = r.display_name;
+        suggestionsBox.style.display = 'none';
+        updateBookState();
       });
-    }catch(e){ console.warn('Formspree send failed', e); }
-  }
-
-  function toCSV(rows){
-    if(!rows.length) return '';
-    const headerSet = new Set();
-    rows.forEach(r => Object.keys(r).forEach(k => headerSet.add(k)));
-    const headers = Array.from(headerSet);
-    const escape = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
-    const lines = [headers.join(',')];
-    rows.forEach(r => lines.push(headers.map(h => escape(r[h])).join(',')));
-    return lines.join('\n');
-  }
-
-  function downloadCSV(filename, rows){
-    if(!rows.length){ showToast('Nothing to export yet.'); return; }
-    const csv = toCSV(rows);
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // ---- modal open/close helpers ----
-  function openModal(id){ document.getElementById(id).classList.add('open'); }
-  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-  document.querySelectorAll('[data-close-modal]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      btn.closest('.modal-overlay').classList.remove('open');
+      suggestionsBox.appendChild(div);
     });
-  });
-  document.querySelectorAll('.modal-overlay').forEach(ov=>{
-    ov.addEventListener('click', (e)=>{ if(e.target === ov) ov.classList.remove('open'); });
-  });
-
-  // ---- nav auth state rendering ----
-  function renderAuthArea(){
-    const area = document.getElementById('navAuthArea');
-    const user = DB.currentUser();
-    if(user){
-      area.innerHTML = `<div class="user-chip"><span class="name">🐢 ${user.name.split(' ')[0]}</span><button class="logout-btn" id="logoutBtn">Log out</button></div>`;
-      document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-        if(user.authMethod === 'internet-identity' && window.iiLogout){
-          try{ await window.iiLogout(); }catch(e){ console.warn(e); }
-        }
-        DB.logout(); renderAuthArea(); showToast("Logged out. See you soon!");
-      });
-    } else {
-      area.innerHTML = `<button class="navcta" id="navLoginBtn" type="button">Log in / Sign up</button>`;
-      document.getElementById('navLoginBtn').addEventListener('click', ()=>openAuthModal('login'));
-    }
+    suggestionsBox.style.display = 'block';
   }
 
-  function openAuthModal(tab){
-    document.getElementById('authFormArea').style.display = 'block';
-    document.getElementById('iiProfileArea').style.display = 'none';
-    document.getElementById('authSuccessArea').style.display = 'none';
-    switchAuthTab(tab || 'login');
-    openModal('authModal');
-  }
-
-  function switchAuthTab(tab){
-    const isLogin = tab === 'login';
-    document.getElementById('tabLogin').classList.toggle('active', isLogin);
-    document.getElementById('tabSignup').classList.toggle('active', !isLogin);
-    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-    document.getElementById('signupForm').style.display = isLogin ? 'none' : 'block';
-  }
-  document.getElementById('tabLogin').addEventListener('click', ()=>switchAuthTab('login'));
-  document.getElementById('tabSignup').addEventListener('click', ()=>switchAuthTab('signup'));
-  document.getElementById('gotoSignup').addEventListener('click', (e)=>{e.preventDefault();switchAuthTab('signup');});
-  document.getElementById('gotoLogin').addEventListener('click', (e)=>{e.preventDefault();switchAuthTab('login');});
-
-  // CTA buttons that open the auth modal
-  ['heroHustleBtn','pathHustleBtn','finalCtaBtn'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('click', ()=>openAuthModal('signup'));
-  });
-
-  // CTA buttons that open the task modal (require login)
-  function openTaskFlow(){
-    const user = DB.currentUser();
-    if(!user){
-      showToast('Log in or sign up first — then post your task.');
-      openAuthModal('signup');
-      return;
-    }
-    document.getElementById('taskFormArea').style.display = 'block';
-    document.getElementById('taskSuccessArea').style.display = 'none';
-    document.getElementById('taskEmail').value = user.email;
-    openModal('taskModal');
-  }
-  ['heroPostBtn','pathPostBtn'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('click', openTaskFlow);
-  });
-
-  // ---- signup ----
-  document.getElementById('signupForm').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const users = DB.users();
-    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
-    if(users.some(u=>u.email === email)){
-      showToast('An account with that email already exists — try logging in.');
-      switchAuthTab('login');
-      return;
-    }
-    const newUser = {
-      name: document.getElementById('signupName').value.trim(),
-      email,
-      phone: document.getElementById('signupPhone').value.trim(),
-      city: document.getElementById('signupCity').value.trim(),
-      role: document.getElementById('signupRole').value,
-      password: document.getElementById('signupPassword').value, // demo only — never store plain-text passwords in production
-      joined: new Date().toISOString()
-    };
-    users.push(newUser);
-    DB.saveUsers(users);
-    DB.setCurrentUser(newUser);
-    renderAuthArea();
-    await sendToFormspree({form:'signup', ...newUser, password:'(hidden)'});
-
-    document.getElementById('authFormArea').style.display = 'none';
-    document.getElementById('authSuccessArea').style.display = 'block';
-    document.getElementById('authSuccessMsg').textContent = `Welcome, ${newUser.name.split(' ')[0]}! You're logged in and ready to ${newUser.role === 'hustler' ? 'start hustling' : 'post your first task'}.`;
-    e.target.reset();
-  });
-
-  // ---- Internet Identity ----
-  let pendingPrincipal = null;
-
-  document.getElementById('iiLoginBtn').addEventListener('click', async ()=>{
-    const btn = document.getElementById('iiLoginBtn');
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="ii-mark">∞</span> Opening Internet Identity…';
-    try{
-      const principal = await window.iiLogin();
-      handleIIPrincipal(principal);
-    }catch(err){
-      showToast(err && err.message ? err.message : 'Internet Identity sign-in was cancelled.');
-    }finally{
-      btn.disabled = false;
-      btn.innerHTML = original;
+  document.addEventListener('click', (e) => {
+    if (!suggestionsBox.contains(e.target) && e.target !== destInput){
+      suggestionsBox.style.display = 'none';
     }
   });
 
-  function handleIIPrincipal(principal){
-    const users = DB.users();
-    const existing = users.find(u => u.principal === principal);
-    if(existing){
-      DB.setCurrentUser(existing);
-      renderAuthArea();
-      document.getElementById('authFormArea').style.display = 'none';
-      document.getElementById('iiProfileArea').style.display = 'none';
-      document.getElementById('authSuccessArea').style.display = 'block';
-      document.getElementById('authSuccessMsg').textContent = `Welcome back, ${existing.name.split(' ')[0]}! Signed in with Internet Identity.`;
-    } else {
-      pendingPrincipal = principal;
-      document.getElementById('authFormArea').style.display = 'none';
-      document.getElementById('iiProfileArea').style.display = 'block';
-      document.getElementById('iiPrincipalNote').textContent = `Principal: ${principal.slice(0,28)}…`;
-    }
-    if(!document.getElementById('authModal').classList.contains('open')) openModal('authModal');
-  }
-
-  document.getElementById('iiProfileForm').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const users = DB.users();
-    const newUser = {
-      principal: pendingPrincipal,
-      name: document.getElementById('iiName').value.trim(),
-      email: document.getElementById('iiEmail').value.trim(),
-      phone: document.getElementById('iiPhone').value.trim(),
-      city: document.getElementById('iiCity').value.trim(),
-      role: document.getElementById('iiRole').value,
-      authMethod: 'internet-identity',
-      joined: new Date().toISOString()
-    };
-    users.push(newUser);
-    DB.saveUsers(users);
-    DB.setCurrentUser(newUser);
-    renderAuthArea();
-    await sendToFormspree({form:'signup_internet_identity', ...newUser});
-
-    document.getElementById('iiProfileArea').style.display = 'none';
-    document.getElementById('authSuccessArea').style.display = 'block';
-    document.getElementById('authSuccessMsg').textContent = `Welcome, ${newUser.name.split(' ')[0]}! Your Internet Identity is now linked.`;
-    e.target.reset();
+  // 3. Book -> Uber universal deep link
+  bookBtn.addEventListener('click', () => {
+    if (!pickup || !dropoff) return;
+    const params = new URLSearchParams({
+      action: 'setPickup',
+      'pickup[latitude]': pickup.lat,
+      'pickup[longitude]': pickup.lng,
+      'dropoff[latitude]': dropoff.lat,
+      'dropoff[longitude]': dropoff.lng,
+      'dropoff[formatted_address]': dropoff.label
+    });
+    const url = `https://m.uber.com/ul/?${params.toString()}`;
+    window.location.href = url;
   });
-
-  // If the visitor already has a live Internet Identity session (e.g. they
-  // signed in on a previous visit), quietly restore it on page load.
-  window.addEventListener('ii-already-authenticated', (e)=>{
-    if(DB.currentUser()) return; // don't override an active demo-login session
-    const principal = e.detail;
-    const existing = DB.users().find(u => u.principal === principal);
-    if(existing){
-      DB.setCurrentUser(existing);
-      renderAuthArea();
-    }
-  });
-  window.addEventListener('ii-unavailable', ()=>{
-    const btn = document.getElementById('iiLoginBtn');
-    if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ii-mark">∞</span> Internet Identity unavailable offline'; }
-  });
-  // Belt-and-suspenders: if neither ii-ready nor ii-unavailable fires within
-  // a few seconds (e.g. the CDN is unreachable), don't leave a dead button.
-  setTimeout(()=>{
-    if(!window.iiLogin){
-      const btn = document.getElementById('iiLoginBtn');
-      if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ii-mark">∞</span> Internet Identity unavailable right now'; }
-    }
-  }, 6000);
-
-  // ---- login ----
-  document.getElementById('loginForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-    const password = document.getElementById('loginPassword').value;
-    const user = DB.users().find(u => u.email === email && u.password === password);
-    if(!user){
-      showToast('No matching account found in this browser. Try signing up.');
-      return;
-    }
-    DB.setCurrentUser(user);
-    renderAuthArea();
-    document.getElementById('authFormArea').style.display = 'none';
-    document.getElementById('authSuccessArea').style.display = 'block';
-    document.getElementById('authSuccessMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
-    e.target.reset();
-  });
-
-  // ---- post a task ----
-  document.getElementById('taskForm').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const user = DB.currentUser();
-    const tasks = DB.tasks();
-    const newTask = {
-      title: document.getElementById('taskTitle').value.trim(),
-      category: document.getElementById('taskCategory').value,
-      budget: document.getElementById('taskBudget').value,
-      location: document.getElementById('taskLocation').value.trim(),
-      details: document.getElementById('taskDetails').value.trim(),
-      contact_email: document.getElementById('taskEmail').value.trim(),
-      posted_by: user ? user.name : '',
-      posted_at: new Date().toISOString()
-    };
-    tasks.push(newTask);
-    DB.saveTasks(tasks);
-    await sendToFormspree({form:'task_post', ...newTask});
-
-    document.getElementById('taskFormArea').style.display = 'none';
-    document.getElementById('taskSuccessArea').style.display = 'block';
-    e.target.reset();
-  });
-
-  // ---- admin CSV export ----
-  document.getElementById('exportUsersBtn').addEventListener('click', ()=>{
-    const rows = DB.users().map(({password, ...rest}) => rest); // never export passwords
-    downloadCSV('turtlehustler_signups.csv', rows);
-  });
-  document.getElementById('exportTasksBtn').addEventListener('click', ()=>{
-    downloadCSV('turtlehustler_tasks.csv', DB.tasks());
-  });
-
-  renderAuthArea();
 </script>
-
 </body>
 </html>
