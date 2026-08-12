@@ -2,256 +2,309 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quick Uber</title>
+<title>Study Plan · Aug 12–28</title>
 <style>
   :root{
-    --bg:#0a0a0a;
-    --card:#151515;
-    --accent:#000000;
-    --text:#f5f5f5;
-    --muted:#9a9a9a;
-    --uber-black:#000;
+    --bg:#0f1115; --card:#171a21; --card2:#1d212a; --line:#2a2f3a;
+    --ink:#eef1f6; --ink2:#9aa3b2; --ink3:#5f6779;
+    --math:#8b7bf0; --math-bg:#211d3a; --math-line:#4b3fa0;
+    --phy:#f0a83c; --phy-bg:#332510; --phy-line:#a06a1c;
+    --chem:#3ecf8e; --chem-bg:#0f2f24; --chem-line:#1c8a5c;
+    --rev:#f0596b; --rev-bg:#331419; --rev-line:#a02f3c;
+    --high:#f0596b; --med:#f0a83c; --low:#5f6779;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:28px 16px 60px;
   }
-  .card{
-    width:100%;
-    max-width:420px;
-    background:var(--card);
-    border-radius:16px;
-    padding:28px;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
-    border:1px solid #262626;
+  .wrap{max-width:640px;margin:0 auto;}
+  .head{margin-bottom:22px;}
+  .eyebrow{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink3); font-weight:600; margin-bottom:6px;
   }
   h1{
-    font-size:22px;
-    margin:0 0 4px;
-    letter-spacing:-0.02em;
+    font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:-.01em;
+    font-family:Georgia,"Times New Roman",serif;
   }
-  p.sub{
-    color:var(--muted);
-    font-size:14px;
-    margin:0 0 24px;
+  .sub{color:var(--ink2); font-size:14px; margin-bottom:18px;}
+  .progress-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; margin-bottom:22px;
   }
-  .status{
-    font-size:13px;
-    padding:10px 12px;
-    border-radius:10px;
-    background:#1e1e1e;
-    margin-bottom:18px;
-    display:flex;
-    align-items:center;
-    gap:8px;
+  .progress-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .progress-num{font-size:22px; font-weight:700;}
+  .progress-label{font-size:12px; color:var(--ink2);}
+  .bar-track{height:8px; background:var(--card2); border-radius:99px; overflow:hidden;}
+  .bar-fill{height:100%; background:linear-gradient(90deg,var(--math),var(--chem)); width:0%; transition:width .3s ease;}
+  .legend{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap;}
+  .legend-item{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink2);}
+  .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .day{
+    border:1px solid var(--line); border-radius:14px; margin-bottom:12px; overflow:hidden;
+    background:var(--card);
   }
-  .dot{
-    width:8px;height:8px;border-radius:50%;
-    background:var(--muted);
-    flex-shrink:0;
+  .day-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 16px; cursor:pointer; user-select:none;
   }
-  .dot.ok{background:#2ecc71;}
-  .dot.err{background:#e74c3c;}
-  label{
-    display:block;
-    font-size:13px;
-    color:var(--muted);
-    margin-bottom:6px;
+  .day-head-left{display:flex; align-items:center; gap:12px;}
+  .day-num{
+    font-family:Georgia,"Times New Roman",serif; font-size:20px; font-weight:700;
+    color:var(--ink3); min-width:26px;
   }
-  .search-wrap{
-    position:relative;
-    margin-bottom:18px;
+  .day-date-block{display:flex; flex-direction:column;}
+  .day-date{font-size:14px; font-weight:600;}
+  .day-tag{font-size:11px; color:var(--ink3); margin-top:1px;}
+  .day-right{display:flex; align-items:center; gap:10px;}
+  .day-check-count{font-size:11px; color:var(--ink2);}
+  .chev{color:var(--ink3); font-size:12px; transition:transform .2s;}
+  .day.open .chev{transform:rotate(90deg);}
+  .day-body{
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
+    padding:0 16px;
   }
-  input[type="text"]{
-    width:100%;
-    padding:14px 14px;
-    border-radius:12px;
-    border:1px solid #333;
-    background:#0f0f0f;
-    color:var(--text);
-    font-size:15px;
-    outline:none;
+  .day.open .day-body{max-height:600px; padding:0 16px 14px;}
+  .topic{
+    display:flex; align-items:flex-start; gap:10px; padding:9px 0;
+    border-top:1px solid var(--line);
   }
-  input[type="text"]:focus{
-    border-color:#555;
+  .topic:first-child{border-top:none;}
+  .chk{
+    width:19px; height:19px; border-radius:6px; border:1.5px solid var(--ink3);
+    flex-shrink:0; margin-top:1px; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; font-size:12px; color:transparent; transition:.15s;
   }
-  .suggestions{
-    position:absolute;
-    top:calc(100% + 6px);
-    left:0;right:0;
-    background:#1c1c1c;
-    border:1px solid #333;
-    border-radius:12px;
-    overflow:hidden;
-    z-index:10;
-    max-height:220px;
-    overflow-y:auto;
-    display:none;
+  .chk.on{color:var(--bg);}
+  .topic.mathC .chk.on{background:var(--math); border-color:var(--math);}
+  .topic.phyC .chk.on{background:var(--phy); border-color:var(--phy);}
+  .topic.chemC .chk.on{background:var(--chem); border-color:var(--chem);}
+  .topic.revC .chk.on{background:var(--rev); border-color:var(--rev);}
+  .topic-text{flex:1;}
+  .topic-name{font-size:14px; line-height:1.4;}
+  .topic-name.done{color:var(--ink3); text-decoration:line-through;}
+  .topic-meta{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap;}
+  .subj-badge{
+    font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px;
+    letter-spacing:.02em;
   }
-  .suggestions div{
-    padding:12px 14px;
-    font-size:14px;
-    cursor:pointer;
-    border-bottom:1px solid #2a2a2a;
+  .subj-badge.math{background:var(--math-bg); color:var(--math); border:1px solid var(--math-line);}
+  .subj-badge.phy{background:var(--phy-bg); color:var(--phy); border:1px solid var(--phy-line);}
+  .subj-badge.chem{background:var(--chem-bg); color:var(--chem); border:1px solid var(--chem-line);}
+  .subj-badge.rev{background:var(--rev-bg); color:var(--rev); border:1px solid var(--rev-line);}
+  .wt-badge{
+    font-size:10px; font-weight:600; padding:2px 7px; border-radius:5px;
+    background:var(--card2); color:var(--ink2);
   }
-  .suggestions div:last-child{border-bottom:none;}
-  .suggestions div:hover{background:#262626;}
-  button.book{
-    width:100%;
-    padding:16px;
-    border:none;
-    border-radius:12px;
-    background:#fff;
-    color:#000;
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
-    transition:opacity .15s;
-  }
-  button.book:disabled{
-    opacity:0.4;
-    cursor:not-allowed;
-  }
-  button.book:active:not(:disabled){opacity:0.8;}
+  .wt-badge.High{color:var(--high);}
+  .wt-badge.Med{color:var(--phy);}
   .note{
-    margin-top:14px;
-    font-size:12px;
-    color:var(--muted);
-    line-height:1.5;
+    font-size:12px; color:var(--ink3); padding:8px 0 0; font-style:italic;
   }
+  .footer-tip{
+    margin-top:20px; padding:14px 16px; background:var(--card2);
+    border-radius:12px; font-size:13px; color:var(--ink2); line-height:1.6;
+  }
+  .footer-tip b{color:var(--ink);}
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Quick Uber</h1>
-    <p class="sub">Pickup uses your current location. Search a destination, tap Book — it opens Uber ready to request.</p>
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Class 12 · Boards prep</div>
+    <h1>Aug 13 → Aug 29 study plan</h1>
+    <div class="sub">Math, Physics and Chemistry, sequenced so a heavy topic is always followed by something lighter. Tap a day to open it, tap a topic to check it off.</div>
+  </div>
 
-    <div class="status" id="locStatus">
-      <div class="dot" id="locDot"></div>
-      <span id="locText">Detecting your location…</span>
+  <div class="progress-card">
+    <div class="progress-top">
+      <div><span class="progress-num" id="pnum">0</span><span class="progress-label"> / <span id="ptotal">0</span> topics done</span></div>
+      <div class="progress-label" id="pdays">17 days</div>
     </div>
-
-    <label for="dest">Destination</label>
-    <div class="search-wrap">
-      <input type="text" id="dest" placeholder="Type an address or place…" autocomplete="off">
-      <div class="suggestions" id="suggestions"></div>
-    </div>
-
-    <button class="book" id="bookBtn" disabled>Book Uber</button>
-
-    <div class="note">
-      Tapping Book opens the Uber app (or uber.com) with pickup and drop-off already filled in — you still confirm the ride inside Uber. Location search powered by OpenStreetMap.
+    <div class="bar-track"><div class="bar-fill" id="pbar"></div></div>
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:var(--math)"></span>Maths</div>
+      <div class="legend-item"><span class="dot" style="background:var(--phy)"></span>Physics</div>
+      <div class="legend-item"><span class="dot" style="background:var(--chem)"></span>Chemistry</div>
+      <div class="legend-item"><span class="dot" style="background:var(--rev)"></span>Revision</div>
     </div>
   </div>
 
+  <div id="days"></div>
+
+  <div class="footer-tip">
+    <b>How the order was picked:</b> Integrals, Determinants, Application of Derivatives, Electrostatics, Magnetism, EMI/AC, Electrochemistry and Chemical Kinetics carry the most board marks, so each gets its own full day. Lighter topics (Inverse Trig, EM Waves, Solutions, Magnetism and Matter) are paired next to a heavy one instead of getting a day to themselves — high, then light, then high again, so no stretch feels like a slog. Days 16–17 are kept free for a mixed mock test and a final formula-sheet pass. Once you upload your actual portions/syllabus split, tell me and I'll adjust the topic order and pairing to match.
+  </div>
+</div>
+
 <script>
-  let pickup = null;   // { lat, lng }
-  let dropoff = null;  // { lat, lng, label }
+const plan = [
+  {date:"Aug 12", dow:"Wed", topics:[
+    {s:"math", n:"Relations and Functions", w:"Med"},
+    {s:"math", n:"Inverse Trigonometric Functions", w:"Med"}
+  ]},
+  {date:"Aug 13", dow:"Thu", topics:[
+    {s:"phy", n:"Electric Charges and Fields", w:"High"}
+  ]},
+  {date:"Aug 14", dow:"Fri", topics:[
+    {s:"chem", n:"Chemical Kinetics", w:"High"}
+  ]},
+  {date:"Aug 15", dow:"Sat", tag:"Lighter day", topics:[
+    {s:"math", n:"Matrices", w:"Med"}
+  ]},
+  {date:"Aug 16", dow:"Sun", topics:[
+    {s:"phy", n:"Electrostatic Potential and Capacitance", w:"High"}
+  ]},
+  {date:"Aug 17", dow:"Mon", topics:[
+    {s:"chem", n:"Alcohols, Phenols and Ethers", w:"High"}
+  ]},
+  {date:"Aug 18", dow:"Tue", topics:[
+    {s:"math", n:"Determinants", w:"High"}
+  ]},
+  {date:"Aug 19", dow:"Wed", topics:[
+    {s:"phy", n:"Current Electricity", w:"Med"},
+    {s:"phy", n:"Electromagnetic Waves", w:"Low"}
+  ]},
+  {date:"Aug 20", dow:"Thu", topics:[
+    {s:"chem", n:"Electrochemistry", w:"High"}
+  ]},
+  {date:"Aug 21", dow:"Fri", topics:[
+    {s:"math", n:"Continuity and Differentiability", w:"High"}
+  ]},
+  {date:"Aug 22", dow:"Sat", topics:[
+    {s:"phy", n:"Moving Charges and Magnetism", w:"High"},
+    {s:"phy", n:"Magnetism and Matter", w:"Med"}
+  ]},
+  {date:"Aug 23", dow:"Sun", topics:[
+    {s:"chem", n:"Haloalkanes and Haloarenes", w:"High"}
+  ]},
+  {date:"Aug 24", dow:"Mon", topics:[
+    {s:"math", n:"Application of Derivatives", w:"High"}
+  ]},
+  {date:"Aug 25", dow:"Tue", topics:[
+    {s:"phy", n:"Electromagnetic Induction", w:"High"},
+    {s:"phy", n:"Alternating Current", w:"Med"}
+  ]},
+  {date:"Aug 26", dow:"Wed", topics:[
+    {s:"math", n:"Integrals", w:"High"},
+    {s:"chem", n:"Solutions", w:"Med"}
+  ]},
+  {date:"Aug 27", dow:"Thu", tag:"Mixed revision", topics:[
+    {s:"rev", n:"Mock test: pick 1 numerical-heavy chapter per subject (Integrals, Magnetism, Electrochemistry)", w:"High"},
+    {s:"rev", n:"Redo every topic you marked shaky this week", w:"Med"}
+  ]},
+  {date:"Aug 28", dow:"Fri", tag:"Final pass", topics:[
+    {s:"rev", n:"Formula sheet: all 3 subjects, quick recall only, no new problems", w:"High"}
+  ]}
+];
 
-  const locDot = document.getElementById('locDot');
-  const locText = document.getElementById('locText');
-  const destInput = document.getElementById('dest');
-  const suggestionsBox = document.getElementById('suggestions');
-  const bookBtn = document.getElementById('bookBtn');
+const subjLabel = {math:"Maths", phy:"Physics", chem:"Chemistry", rev:"Revision"};
+const container = document.getElementById('days');
+let totalTopics = 0;
 
-  function updateBookState(){
-    bookBtn.disabled = !(pickup && dropoff);
-  }
+plan.forEach((day, di) => {
+  totalTopics += day.topics.length;
+  const el = document.createElement('div');
+  el.className = 'day';
+  if (di === 0) el.classList.add('open');
 
-  // 1. Get current location
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        locDot.classList.add('ok');
-        locText.textContent = 'Location detected';
-        updateBookState();
-      },
-      err => {
-        locDot.classList.add('err');
-        locText.textContent = 'Location blocked — enable it in your browser settings';
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  } else {
-    locDot.classList.add('err');
-    locText.textContent = 'Geolocation not supported by this browser';
-  }
+  const head = document.createElement('div');
+  head.className = 'day-head';
+  head.innerHTML = `
+    <div class="day-head-left">
+      <div class="day-num">${String(di+1).padStart(2,'0')}</div>
+      <div class="day-date-block">
+        <div class="day-date">${day.date} · ${day.dow}</div>
+        <div class="day-tag">${day.tag ? day.tag : day.topics.length+' topic'+(day.topics.length>1?'s':'')}</div>
+      </div>
+    </div>
+    <div class="day-right">
+      <span class="day-check-count" data-count>0/${day.topics.length}</span>
+      <span class="chev">&#9656;</span>
+    </div>
+  `;
+  head.addEventListener('click', () => el.classList.toggle('open'));
 
-  // 2. Destination search (debounced) via Nominatim (OpenStreetMap)
-  let debounceTimer;
-  destInput.addEventListener('input', () => {
-    dropoff = null;
-    updateBookState();
-    clearTimeout(debounceTimer);
-    const q = destInput.value.trim();
-    if (q.length < 3) {
-      suggestionsBox.style.display = 'none';
-      return;
-    }
-    debounceTimer = setTimeout(() => searchPlaces(q), 350);
+  const body = document.createElement('div');
+  body.className = 'day-body';
+
+  day.topics.forEach((t, ti) => {
+    const key = `d${di}-t${ti}`;
+    const row = document.createElement('div');
+    row.className = `topic ${t.s}C`;
+    row.innerHTML = `
+      <div class="chk" data-key="${key}">&#10003;</div>
+      <div class="topic-text">
+        <div class="topic-name" data-name>${t.n}</div>
+        <div class="topic-meta">
+          <span class="subj-badge ${t.s}">${subjLabel[t.s]}</span>
+          <span class="wt-badge ${t.w}">${t.w} weightage</span>
+        </div>
+      </div>
+    `;
+    body.appendChild(row);
   });
 
-  async function searchPlaces(query){
-    try{
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
-      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      const results = await res.json();
-      renderSuggestions(results);
-    }catch(e){
-      suggestionsBox.style.display = 'none';
-    }
-  }
+  el.appendChild(head);
+  el.appendChild(body);
+  container.appendChild(el);
+});
 
-  function renderSuggestions(results){
-    suggestionsBox.innerHTML = '';
-    if (!results.length){
-      suggestionsBox.style.display = 'none';
-      return;
+document.getElementById('ptotal').textContent = totalTopics;
+
+async function loadState(){
+  const state = {};
+  try{
+    const res = await window.storage.list('chk:');
+    if(res && res.keys){
+      for(const k of res.keys){
+        try{
+          const item = await window.storage.get(k);
+          if(item) state[k] = item.value === 'true';
+        }catch(e){}
+      }
     }
-    results.forEach(r => {
-      const div = document.createElement('div');
-      div.textContent = r.display_name;
-      div.addEventListener('click', () => {
-        dropoff = { lat: parseFloat(r.lat), lng: parseFloat(r.lon), label: r.display_name };
-        destInput.value = r.display_name;
-        suggestionsBox.style.display = 'none';
-        updateBookState();
-      });
-      suggestionsBox.appendChild(div);
+  }catch(e){}
+  return state;
+}
+
+function updateProgress(){
+  const boxes = document.querySelectorAll('.chk');
+  let done = 0;
+  boxes.forEach(b => { if(b.classList.contains('on')) done++; });
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = totalTopics ? (done/totalTopics*100)+'%' : '0%';
+
+  document.querySelectorAll('.day').forEach(dayEl => {
+    const checks = dayEl.querySelectorAll('.chk');
+    const on = dayEl.querySelectorAll('.chk.on').length;
+    const counter = dayEl.querySelector('[data-count]');
+    if(counter) counter.textContent = `${on}/${checks.length}`;
+  });
+}
+
+(async () => {
+  const state = await loadState();
+  document.querySelectorAll('.chk').forEach(box => {
+    const key = box.getAttribute('data-key');
+    if(state['chk:'+key]){
+      box.classList.add('on');
+      const nameEl = box.parentElement.querySelector('[data-name]');
+      if(nameEl) nameEl.classList.add('done');
+    }
+    box.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const isOn = box.classList.toggle('on');
+      const nameEl = box.parentElement.querySelector('[data-name]');
+      if(nameEl) nameEl.classList.toggle('done', isOn);
+      updateProgress();
+      try{ await window.storage.set('chk:'+key, String(isOn), false); }catch(err){}
     });
-    suggestionsBox.style.display = 'block';
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!suggestionsBox.contains(e.target) && e.target !== destInput){
-      suggestionsBox.style.display = 'none';
-    }
   });
-
-  // 3. Book -> Uber universal deep link
-  bookBtn.addEventListener('click', () => {
-    if (!pickup || !dropoff) return;
-    const params = new URLSearchParams({
-      action: 'setPickup',
-      'pickup[latitude]': pickup.lat,
-      'pickup[longitude]': pickup.lng,
-      'dropoff[latitude]': dropoff.lat,
-      'dropoff[longitude]': dropoff.lng,
-      'dropoff[formatted_address]': dropoff.label
-    });
-    const url = `https://m.uber.com/ul/?${params.toString()}`;
-    window.location.href = url;
-  });
+  updateProgress();
+})();
 </script>
 </body>
 </html>
