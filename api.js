@@ -34,18 +34,24 @@ $("b3").onclick=async()=>{const m=$("m3"),pl=$("vpl").value.trim().toUpperCase()
   if(!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(pl)){m.textContent="Enter a valid plate, like KL07AB1234.";return}
   try{apply(await api("saveVehicle",{veh:{make:mk,model:md,plate:pl,cn:$("vcn").value}}));boot()}catch(e){m.textContent=e.message}};
 
-// Razorpay top-up
-$("tgo").onclick=async()=>{const a=+$("tamt").value,m=$("tmsg"),b=$("tgo");
+// UPI top-up: pay to the owner's UPI ID, then submit the 12-digit UTR; admin approves
+$("tgo").textContent="Pay with UPI app";
+$("tgo").insertAdjacentHTML("afterend",'<div id="ub" hidden><div class="mu" id="ut" style="margin:8px 0"></div><input type="text" id="utr" inputmode="numeric" maxlength="12" placeholder="12-digit UTR / reference no."><button class="p w" id="usub">I have paid. Submit</button></div>');
+$("tgo").onclick=()=>{const a=Math.round(+$("tamt").value),m=$("tmsg");
   if(!(a>=10&&a<=100000)){m.className="msg no";m.textContent="Enter an amount between ₹10 and ₹1,00,000.";return}
-  b.disabled=true;m.className="msg";m.textContent="Opening Razorpay…";
-  try{const o=await api("createOrder",{amount:a});
-    const rz=new Razorpay({key:RAZORPAY_KEY_ID,amount:o.amount,currency:"INR",order_id:o.id,name:"ChargeOne",description:"Wallet top-up",prefill:{contact:st.phone},theme:{color:"#0f9d58"},
-      handler:async r=>{m.textContent="Confirming payment…";
-        try{apply(await api("verifyPayment",{order_id:r.razorpay_order_id,payment_id:r.razorpay_payment_id,signature:r.razorpay_signature}));render();m.className="msg ok";m.textContent=inr(a)+" added to your wallet."}
-        catch(e){m.className="msg no";m.textContent=e.message}b.disabled=false},
-      modal:{ondismiss:()=>{b.disabled=false;m.textContent=""}}});
-    rz.on("payment.failed",r=>{m.className="msg no";m.textContent="Payment failed: "+r.error.description;b.disabled=false});rz.open()}
-  catch(e){m.className="msg no";m.textContent=e.message;b.disabled=false}};
+  const link="upi://pay?pa="+encodeURIComponent(UPI_ID)+"&pn="+encodeURIComponent(UPI_NAME)+"&am="+a+"&cu=INR&tn="+encodeURIComponent("ChargeOne wallet");
+  $("ut").innerHTML="Pay <b>"+inr(a)+"</b> to UPI ID <b>"+UPI_ID+"</b>, then enter the 12-digit reference (UTR) from your payment app.";
+  $("ub").hidden=false;m.className="msg";m.textContent="";location.href=link};
+$("usub").onclick=async()=>{const m=$("tmsg"),a=Math.round(+$("tamt").value);
+  try{apply(await api("topupSubmit",{amount:a,utr:$("utr").value.trim()}));render();$("utr").value="";$("ub").hidden=true;
+    m.className="msg ok";m.textContent="Submitted. "+inr(a)+" is added to your wallet once the payment is verified."}
+  catch(e){m.className="msg no";m.textContent=e.message}};
+
+// Gift / promo code redeem
+$("tmsg").insertAdjacentHTML("afterend",'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd,#2a332d)"><div class="mu">Have a gift code?</div><input type="text" id="gc" placeholder="Enter gift code" autocapitalize="characters" autocomplete="off"><button class="p w" id="gcb">Redeem</button><div class="msg" id="gcm"></div></div>');
+$("gcb").onclick=async()=>{const m=$("gcm"),b=$("gcb"),before=st.bal;b.disabled=true;m.className="msg";m.textContent="Checking…";
+  try{apply(await api("redeem",{code:$("gc").value.trim()}));render();$("gc").value="";m.className="msg ok";m.textContent=inr(st.bal-before)+" added to your wallet."}
+  catch(e){m.className="msg no";m.textContent=e.message}b.disabled=false};
 
 // Charging: server holds the money, then settles on stop
 $("go").onclick=async()=>{const{k}=calc();$("go").disabled=true;$("msg").className="msg";$("msg").textContent="Starting…";

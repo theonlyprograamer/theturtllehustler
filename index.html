@@ -64,7 +64,7 @@ video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#
   <section id="v-wallet" hidden>
     <div class="card"><div class="mu">Wallet balance</div><div class="big" id="bal"></div>
       <button class="p" id="addm">+ Add money</button>
-      <div class="mu" style="margin-top:8px">Refunds and unused balance return here. Add money with UPI, cards or netbanking via Razorpay.</div></div>
+      <div class="mu" style="margin-top:8px">Refunds and unused balance return here. Add money by paying to our UPI ID from any UPI app.</div></div>
     <h2>Activity</h2><div class="card" id="hist"></div></section>
   <section id="v-me" hidden><h2>Profile</h2>
     <div class="card"><div class="mu">Phone</div><b id="mph"></b>
@@ -79,7 +79,7 @@ video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#
   <div class="row"><b>Add money</b><button id="tx">✕</button></div>
   <div class="chips" style="margin-top:12px"><button data-v="200">₹200</button><button data-v="500">₹500</button><button data-v="1000">₹1000</button><button data-v="2000">₹2000</button></div>
   <input type="number" id="tamt" min="10" placeholder="Amount (₹)"><input type="text" id="vpa" placeholder="yourname@upi" autocapitalize="none">
-  <button class="p w" id="tgo">Pay with Razorpay</button><div class="msg" id="tmsg"></div></div></div>
+  <button class="p w" id="tgo">Pay with UPI app</button><div class="msg" id="tmsg"></div></div></div>
 
 <div id="pre" class="ov"><div class="in">
   <div class="row"><b id="pn"></b><button id="px">✕</button></div>
@@ -216,7 +216,6 @@ st.h.filter(h=>h.r===1).forEach(h=>setTimeout(()=>approve(h),3000));
 boot();
 </script>
 <script src="config.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="api.js"></script>
 </body>
 </html>
