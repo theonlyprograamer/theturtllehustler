@@ -1,310 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Study Plan · Aug 12–28</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f9d58">
+<title>ChargeOne – Universal EV Charging</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <style>
-  :root{
-    --bg:#0f1115; --card:#171a21; --card2:#1d212a; --line:#2a2f3a;
-    --ink:#eef1f6; --ink2:#9aa3b2; --ink3:#5f6779;
-    --math:#8b7bf0; --math-bg:#211d3a; --math-line:#4b3fa0;
-    --phy:#f0a83c; --phy-bg:#332510; --phy-line:#a06a1c;
-    --chem:#3ecf8e; --chem-bg:#0f2f24; --chem-line:#1c8a5c;
-    --rev:#f0596b; --rev-bg:#331419; --rev-line:#a02f3c;
-    --high:#f0596b; --med:#f0a83c; --low:#5f6779;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    padding:28px 16px 60px;
-  }
-  .wrap{max-width:640px;margin:0 auto;}
-  .head{margin-bottom:22px;}
-  .eyebrow{
-    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--ink3); font-weight:600; margin-bottom:6px;
-  }
-  h1{
-    font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:-.01em;
-    font-family:Georgia,"Times New Roman",serif;
-  }
-  .sub{color:var(--ink2); font-size:14px; margin-bottom:18px;}
-  .progress-card{
-    background:var(--card); border:1px solid var(--line); border-radius:14px;
-    padding:16px 18px; margin-bottom:22px;
-  }
-  .progress-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
-  .progress-num{font-size:22px; font-weight:700;}
-  .progress-label{font-size:12px; color:var(--ink2);}
-  .bar-track{height:8px; background:var(--card2); border-radius:99px; overflow:hidden;}
-  .bar-fill{height:100%; background:linear-gradient(90deg,var(--math),var(--chem)); width:0%; transition:width .3s ease;}
-  .legend{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap;}
-  .legend-item{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink2);}
-  .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
-  .day{
-    border:1px solid var(--line); border-radius:14px; margin-bottom:12px; overflow:hidden;
-    background:var(--card);
-  }
-  .day-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:13px 16px; cursor:pointer; user-select:none;
-  }
-  .day-head-left{display:flex; align-items:center; gap:12px;}
-  .day-num{
-    font-family:Georgia,"Times New Roman",serif; font-size:20px; font-weight:700;
-    color:var(--ink3); min-width:26px;
-  }
-  .day-date-block{display:flex; flex-direction:column;}
-  .day-date{font-size:14px; font-weight:600;}
-  .day-tag{font-size:11px; color:var(--ink3); margin-top:1px;}
-  .day-right{display:flex; align-items:center; gap:10px;}
-  .day-check-count{font-size:11px; color:var(--ink2);}
-  .chev{color:var(--ink3); font-size:12px; transition:transform .2s;}
-  .day.open .chev{transform:rotate(90deg);}
-  .day-body{
-    max-height:0; overflow:hidden; transition:max-height .25s ease;
-    padding:0 16px;
-  }
-  .day.open .day-body{max-height:600px; padding:0 16px 14px;}
-  .topic{
-    display:flex; align-items:flex-start; gap:10px; padding:9px 0;
-    border-top:1px solid var(--line);
-  }
-  .topic:first-child{border-top:none;}
-  .chk{
-    width:19px; height:19px; border-radius:6px; border:1.5px solid var(--ink3);
-    flex-shrink:0; margin-top:1px; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; font-size:12px; color:transparent; transition:.15s;
-  }
-  .chk.on{color:var(--bg);}
-  .topic.mathC .chk.on{background:var(--math); border-color:var(--math);}
-  .topic.phyC .chk.on{background:var(--phy); border-color:var(--phy);}
-  .topic.chemC .chk.on{background:var(--chem); border-color:var(--chem);}
-  .topic.revC .chk.on{background:var(--rev); border-color:var(--rev);}
-  .topic-text{flex:1;}
-  .topic-name{font-size:14px; line-height:1.4;}
-  .topic-name.done{color:var(--ink3); text-decoration:line-through;}
-  .topic-meta{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap;}
-  .subj-badge{
-    font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px;
-    letter-spacing:.02em;
-  }
-  .subj-badge.math{background:var(--math-bg); color:var(--math); border:1px solid var(--math-line);}
-  .subj-badge.phy{background:var(--phy-bg); color:var(--phy); border:1px solid var(--phy-line);}
-  .subj-badge.chem{background:var(--chem-bg); color:var(--chem); border:1px solid var(--chem-line);}
-  .subj-badge.rev{background:var(--rev-bg); color:var(--rev); border:1px solid var(--rev-line);}
-  .wt-badge{
-    font-size:10px; font-weight:600; padding:2px 7px; border-radius:5px;
-    background:var(--card2); color:var(--ink2);
-  }
-  .wt-badge.High{color:var(--high);}
-  .wt-badge.Med{color:var(--phy);}
-  .note{
-    font-size:12px; color:var(--ink3); padding:8px 0 0; font-style:italic;
-  }
-  .footer-tip{
-    margin-top:20px; padding:14px 16px; background:var(--card2);
-    border-radius:12px; font-size:13px; color:var(--ink2); line-height:1.6;
-  }
-  .footer-tip b{color:var(--ink);}
+:root{--bg:#f6f7f4;--card:#fff;--tx:#14201a;--mu:#66726b;--ac:#0f9d58;--acx:#fff;--bd:#e2e6e1;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101512;--card:#1a211d;--tx:#eaf0ec;--mu:#97a39b;--ac:#2ecc71;--acx:#08140d;--bd:#2a332d;--bad:#ff7a6b}}
+:root[data-theme="dark"]{--bg:#101512;--card:#1a211d;--tx:#eaf0ec;--mu:#97a39b;--ac:#2ecc71;--acx:#08140d;--bd:#2a332d;--bad:#ff7a6b}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:16px 16px 90px}
+h1{font-size:20px;margin:4px 0}h2{font-size:15px;margin:18px 0 8px;color:var(--mu);font-weight:600}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.mu{color:var(--mu);font-size:13px}.ok{color:var(--ac)}.no{color:var(--bad)}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 14px;cursor:pointer}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}button.w{width:100%;margin-top:12px}button:disabled{opacity:.5}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);color:var(--mu)}
+input[type=text],input[type=number],input[type=tel],select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--ac)}label{display:flex;gap:6px;align-items:center}
+.msg{font-size:13px;margin-top:8px;min-height:18px}.big{font-size:32px;font-weight:700;margin:2px 0 10px}
+#nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--card);border-top:1px solid var(--bd);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+#nav button{flex:1;max-width:120px;border:0;background:none;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mu);gap:2px;padding:4px}#nav button.on{color:var(--ac);font-weight:600}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;align-items:flex-end;justify-content:center}
+.ov .in{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+#live{background:var(--bg);align-items:center}#live .in{background:none;text-align:center;border-radius:0}
+.bar{height:10px;border-radius:9px;background:var(--bd);overflow:hidden;margin:14px 0}.bar i{display:block;height:100%;background:var(--ac);width:0}
+video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#000}
+#toast{display:none;position:fixed;left:16px;right:16px;bottom:84px;max-width:448px;margin:0 auto;background:var(--tx);color:var(--bg);padding:12px;border-radius:10px;z-index:40;font-size:14px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="head">
-    <div class="eyebrow">Class 12 · Boards prep</div>
-    <h1>Aug 13 → Aug 29 study plan</h1>
-    <div class="sub">Math, Physics and Chemistry, sequenced so a heavy topic is always followed by something lighter. Tap a day to open it, tap a topic to check it off.</div>
-  </div>
 
-  <div class="progress-card">
-    <div class="progress-top">
-      <div><span class="progress-num" id="pnum">0</span><span class="progress-label"> / <span id="ptotal">0</span> topics done</span></div>
-      <div class="progress-label" id="pdays">17 days</div>
-    </div>
-    <div class="bar-track"><div class="bar-fill" id="pbar"></div></div>
-    <div class="legend">
-      <div class="legend-item"><span class="dot" style="background:var(--math)"></span>Maths</div>
-      <div class="legend-item"><span class="dot" style="background:var(--phy)"></span>Physics</div>
-      <div class="legend-item"><span class="dot" style="background:var(--chem)"></span>Chemistry</div>
-      <div class="legend-item"><span class="dot" style="background:var(--rev)"></span>Revision</div>
-    </div>
-  </div>
-
-  <div id="days"></div>
-
-  <div class="footer-tip">
-    <b>How the order was picked:</b> Integrals, Determinants, Application of Derivatives, Electrostatics, Magnetism, EMI/AC, Electrochemistry and Chemical Kinetics carry the most board marks, so each gets its own full day. Lighter topics (Inverse Trig, EM Waves, Solutions, Magnetism and Matter) are paired next to a heavy one instead of getting a day to themselves — high, then light, then high again, so no stretch feels like a slog. Days 16–17 are kept free for a mixed mock test and a final formula-sheet pass. Once you upload your actual portions/syllabus split, tell me and I'll adjust the topic order and pairing to match.
-  </div>
+<div id="onb" hidden>
+  <h1>⚡ ChargeOne</h1><p class="mu">One wallet. Every EV charger.</p>
+  <div id="s1" class="card"><b>Your phone number</b>
+    <input type="tel" id="ph" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric">
+    <button class="p w" id="b1">Send OTP</button><div class="msg" id="m1"></div></div>
+  <div id="s2" class="card" hidden><b>Enter the OTP</b>
+    <input type="tel" id="otp" placeholder="6-digit OTP" maxlength="6" inputmode="numeric">
+    <button class="p w" id="b2">Verify</button><div class="msg" id="m2"></div></div>
+  <div id="s3" class="card" hidden><b>Your vehicle</b>
+    <input type="text" id="vmk" placeholder="Make (e.g. Tata)"><input type="text" id="vmd" placeholder="Model (e.g. Nexon EV)">
+    <input type="text" id="vpl" placeholder="Number plate (KL07AB1234)" autocapitalize="characters">
+    <select id="vcn"><option>CCS2</option><option>Type 2</option><option>CHAdeMO</option></select>
+    <button class="p w" id="b3">Save &amp; continue</button><div class="msg" id="m3"></div></div>
 </div>
 
+<div id="app" hidden>
+  <div class="row"><h1>⚡ ChargeOne</h1><b id="hb"></b></div>
+  <section id="v-home"><h2>Stations · all networks</h2><div id="list"></div></section>
+  <section id="v-scan" hidden><h2>Scan the charger’s QR</h2>
+    <video id="vid" playsinline muted></video><canvas id="cv" hidden></canvas>
+    <div class="mu" id="cmsg" style="margin:8px 0">Tap start to use your camera.</div>
+    <button class="p w" id="cam" style="margin-top:0">Start camera</button>
+    <input type="file" id="qf" accept="image/*" capture="environment" hidden>
+    <button class="w" id="qb">Or take a photo of the QR</button>
+    <h2>No camera? Enter or pick a code</h2>
+    <div class="row"><input type="text" id="mc" placeholder="e.g. CO-1001" autocapitalize="characters" style="margin:0"><button id="mgo">Go</button></div>
+    <div class="chips" id="demo" style="margin-top:10px"></div></section>
+  <section id="v-wallet" hidden>
+    <div class="card"><div class="mu">Wallet balance</div><div class="big" id="bal"></div>
+      <button class="p" id="addm">+ Add money</button>
+      <div class="mu" style="margin-top:8px">Refunds and unused balance return here. Add money with UPI, cards or netbanking via Razorpay.</div></div>
+    <h2>Activity</h2><div class="card" id="hist"></div></section>
+  <section id="v-me" hidden><h2>Profile</h2>
+    <div class="card"><div class="mu">Phone</div><b id="mph"></b>
+      <div class="mu" style="margin-top:10px">Vehicle</div><b id="mveh"></b><div class="mu" id="mcn"></div>
+      <button class="w" id="ev">Edit vehicle</button><button class="w" id="lo">Log out &amp; reset demo</button></div></section>
+  <nav id="nav">
+    <button id="n-home" data-v="home">🔌<span>Stations</span></button><button id="n-scan" data-v="scan">📷<span>Scan</span></button>
+    <button id="n-wallet" data-v="wallet">👛<span>Wallet</span></button><button id="n-me" data-v="me">👤<span>Profile</span></button></nav>
+</div>
+
+<div id="tsheet" class="ov"><div class="in">
+  <div class="row"><b>Add money</b><button id="tx">✕</button></div>
+  <div class="chips" style="margin-top:12px"><button data-v="200">₹200</button><button data-v="500">₹500</button><button data-v="1000">₹1000</button><button data-v="2000">₹2000</button></div>
+  <input type="number" id="tamt" min="10" placeholder="Amount (₹)"><input type="text" id="vpa" placeholder="yourname@upi" autocapitalize="none">
+  <button class="p w" id="tgo">Pay with Razorpay</button><div class="msg" id="tmsg"></div></div></div>
+
+<div id="pre" class="ov"><div class="in">
+  <div class="row"><b id="pn"></b><button id="px">✕</button></div>
+  <div class="mu" id="pm"></div><div class="mu" id="pv" style="margin-top:4px"></div>
+  <p style="margin:14px 0 4px">Charge up to <b id="kw">10</b> kWh</p><input type="range" id="rg" min="5" max="60" value="10">
+  <div class="row" style="margin-top:8px"><span>Pre-authorised</span><b id="tot"></b></div><div class="mu">Unused amount returns to your wallet when you stop.</div>
+  <div class="row" style="margin-top:12px"><label><input type="radio" name="m" value="w" checked> Wallet</label><label><input type="radio" name="m" value="u"> UPI directly</label></div>
+  <button class="p w" id="go">Start charging</button><div class="msg" id="msg"></div></div></div>
+
+<div id="live" class="ov"><div class="in">
+  <div class="mu" id="ls"></div><h1 id="lt" style="margin-top:6px">Charging…</h1>
+  <div class="big" id="ld">0.00 kWh</div><div class="bar"><i id="lb"></i></div>
+  <div class="row"><span class="mu">Cost so far</span><b id="lc"></b></div>
+  <div class="msg" id="lmsg"></div><button class="p w" id="stopb">Stop charging</button></div></div>
+
+<div id="toast"></div>
+
 <script>
-const plan = [
-  {date:"Aug 12", dow:"Wed", topics:[
-    {s:"math", n:"Relations and Functions", w:"Med"},
-    {s:"math", n:"Inverse Trigonometric Functions", w:"Med"}
-  ]},
-  {date:"Aug 13", dow:"Thu", topics:[
-    {s:"phy", n:"Electric Charges and Fields", w:"High"}
-  ]},
-  {date:"Aug 14", dow:"Fri", topics:[
-    {s:"chem", n:"Chemical Kinetics", w:"High"}
-  ]},
-  {date:"Aug 15", dow:"Sat", tag:"Lighter day", topics:[
-    {s:"math", n:"Matrices", w:"Med"}
-  ]},
-  {date:"Aug 16", dow:"Sun", topics:[
-    {s:"phy", n:"Electrostatic Potential and Capacitance", w:"High"}
-  ]},
-  {date:"Aug 17", dow:"Mon", topics:[
-    {s:"chem", n:"Alcohols, Phenols and Ethers", w:"High"}
-  ]},
-  {date:"Aug 18", dow:"Tue", topics:[
-    {s:"math", n:"Determinants", w:"High"}
-  ]},
-  {date:"Aug 19", dow:"Wed", topics:[
-    {s:"phy", n:"Current Electricity", w:"Med"},
-    {s:"phy", n:"Electromagnetic Waves", w:"Low"}
-  ]},
-  {date:"Aug 20", dow:"Thu", topics:[
-    {s:"chem", n:"Electrochemistry", w:"High"}
-  ]},
-  {date:"Aug 21", dow:"Fri", topics:[
-    {s:"math", n:"Continuity and Differentiability", w:"High"}
-  ]},
-  {date:"Aug 22", dow:"Sat", topics:[
-    {s:"phy", n:"Moving Charges and Magnetism", w:"High"},
-    {s:"phy", n:"Magnetism and Matter", w:"Med"}
-  ]},
-  {date:"Aug 23", dow:"Sun", topics:[
-    {s:"chem", n:"Haloalkanes and Haloarenes", w:"High"}
-  ]},
-  {date:"Aug 24", dow:"Mon", topics:[
-    {s:"math", n:"Application of Derivatives", w:"High"}
-  ]},
-  {date:"Aug 25", dow:"Tue", topics:[
-    {s:"phy", n:"Electromagnetic Induction", w:"High"},
-    {s:"phy", n:"Alternating Current", w:"Med"}
-  ]},
-  {date:"Aug 26", dow:"Wed", topics:[
-    {s:"math", n:"Integrals", w:"High"},
-    {s:"chem", n:"Solutions", w:"Med"}
-  ]},
-  {date:"Aug 27", dow:"Thu", tag:"Mixed revision", topics:[
-    {s:"rev", n:"Mock test: pick 1 numerical-heavy chapter per subject (Integrals, Magnetism, Electrochemistry)", w:"High"},
-    {s:"rev", n:"Redo every topic you marked shaky this week", w:"Med"}
-  ]},
-  {date:"Aug 28", dow:"Fri", tag:"Final pass", topics:[
-    {s:"rev", n:"Formula sheet: all 3 subjects, quick recall only, no new problems", w:"High"}
-  ]}
-];
+const FEE=.03;
+const S=[
+ {id:1,n:"Lulu Mall Fast Hub, Kochi",net:"VoltGrid",cn:"CCS2",kw:60,p:18,a:1},
+ {id:2,n:"Edappally Highway Stop",net:"KeralaCharge",cn:"CCS2",kw:30,p:15,a:1},
+ {id:3,n:"Thrissur Round South",net:"GreenPulse",cn:"Type 2",kw:22,p:12,a:0},
+ {id:4,n:"Kozhikode Beach Road",net:"VoltGrid",cn:"CCS2",kw:120,p:21,a:1},
+ {id:5,n:"Technopark Campus, Trivandrum",net:"GreenPulse",cn:"CCS2",kw:50,p:16,a:1},
+ {id:6,n:"Aluva Metro Parking",net:"KeralaCharge",cn:"CHAdeMO",kw:25,p:14,a:1}];
+const code=s=>"CO-"+(1000+s.id);
+const $=i=>document.getElementById(i),inr=n=>"₹"+(+n).toFixed(2).replace(/\.00$/,"");
+let st={phone:"",veh:null,bal:0,h:[]},cur=null,ss=null,tmpPh="",stream=null,raf=0;
+try{Object.assign(st,JSON.parse(localStorage.getItem("chargeone")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("chargeone",JSON.stringify(st))}catch(e){}};
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",3500)}
+function method(){return document.querySelector("input[name=m]:checked").value}
 
-const subjLabel = {math:"Maths", phy:"Physics", chem:"Chemistry", rev:"Revision"};
-const container = document.getElementById('days');
-let totalTopics = 0;
+/* onboarding */
+function step(n){["s1","s2","s3"].forEach((x,i)=>$(x).hidden=i!=n-1);
+  if(n==3&&st.veh){$("vmk").value=st.veh.make;$("vmd").value=st.veh.model;$("vpl").value=st.veh.plate;$("vcn").value=st.veh.cn}}
+function boot(){const ok=st.phone&&st.veh;$("onb").hidden=!!ok;$("app").hidden=!ok;
+  if(ok)go("home");else step(st.phone?3:1)}
+$("b1").onclick=()=>{const v=$("ph").value.trim();
+  if(!/^[6-9]\d{9}$/.test(v)){$("m1").className="msg no";$("m1").textContent="Enter a valid 10-digit Indian mobile number.";return}
+  tmpPh=v;step(2);$("m2").className="msg";$("m2").textContent="Demo OTP: 123456 (a real app sends an SMS)"};
+$("b2").onclick=()=>{if($("otp").value.trim()!=="123456"){$("m2").className="msg no";$("m2").textContent="Wrong OTP. Try 123456.";return}
+  st.phone="+91 "+tmpPh;save();step(3)};
+$("b3").onclick=()=>{const mk=$("vmk").value.trim(),md=$("vmd").value.trim(),pl=$("vpl").value.trim().toUpperCase().replace(/\s/g,"");
+  if(!mk||!md){$("m3").className="msg no";$("m3").textContent="Enter your vehicle make and model.";return}
+  if(!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(pl)){$("m3").className="msg no";$("m3").textContent="Enter a valid plate, like KL07AB1234.";return}
+  st.veh={make:mk,model:md,plate:pl,cn:$("vcn").value};save();boot()};
 
-plan.forEach((day, di) => {
-  totalTopics += day.topics.length;
-  const el = document.createElement('div');
-  el.className = 'day';
-  if (di === 0) el.classList.add('open');
-
-  const head = document.createElement('div');
-  head.className = 'day-head';
-  head.innerHTML = `
-    <div class="day-head-left">
-      <div class="day-num">${String(di+1).padStart(2,'0')}</div>
-      <div class="day-date-block">
-        <div class="day-date">${day.date} · ${day.dow}</div>
-        <div class="day-tag">${day.tag ? day.tag : day.topics.length+' topic'+(day.topics.length>1?'s':'')}</div>
-      </div>
-    </div>
-    <div class="day-right">
-      <span class="day-check-count" data-count>0/${day.topics.length}</span>
-      <span class="chev">&#9656;</span>
-    </div>
-  `;
-  head.addEventListener('click', () => el.classList.toggle('open'));
-
-  const body = document.createElement('div');
-  body.className = 'day-body';
-
-  day.topics.forEach((t, ti) => {
-    const key = `d${di}-t${ti}`;
-    const row = document.createElement('div');
-    row.className = `topic ${t.s}C`;
-    row.innerHTML = `
-      <div class="chk" data-key="${key}">&#10003;</div>
-      <div class="topic-text">
-        <div class="topic-name" data-name>${t.n}</div>
-        <div class="topic-meta">
-          <span class="subj-badge ${t.s}">${subjLabel[t.s]}</span>
-          <span class="wt-badge ${t.w}">${t.w} weightage</span>
-        </div>
-      </div>
-    `;
-    body.appendChild(row);
-  });
-
-  el.appendChild(head);
-  el.appendChild(body);
-  container.appendChild(el);
-});
-
-document.getElementById('ptotal').textContent = totalTopics;
-
-async function loadState(){
-  const state = {};
-  try{
-    const res = await window.storage.list('chk:');
-    if(res && res.keys){
-      for(const k of res.keys){
-        try{
-          const item = await window.storage.get(k);
-          if(item) state[k] = item.value === 'true';
-        }catch(e){}
-      }
-    }
-  }catch(e){}
-  return state;
+/* navigation + render */
+function go(v){["home","scan","wallet","me"].forEach(x=>{$("v-"+x).hidden=x!=v;$("n-"+x).classList.toggle("on",x==v)});
+  if(v!="scan")stopCam();render()}
+$("nav").onclick=e=>{const b=e.target.closest("button");b&&go(b.dataset.v)};
+function row(a,b,c,cls,h,i){return `<div class="row" style="padding:6px 0"><span>${a}<br><span class="mu">${b}</span></span><span style="text-align:right"><b class="${cls}">${c}</b>${
+  h&&h.t>0&&!h.r?`<br><button data-i="${i}" style="padding:3px 9px;font-size:12px;margin-top:4px">Request refund</button>`:
+  h&&h.r==1?`<br><span class="mu">Refund pending approval…</span>`:h&&h.r==2?`<br><span class="mu">Refunded</span>`:""}</span></div>`}
+function render(){
+  if(!st.veh)return;
+  $("hb").textContent=inr(st.bal);$("bal").textContent=inr(st.bal);
+  $("list").innerHTML=S.map(s=>`<div class="card" data-id="${s.id}" style="cursor:pointer"><div class="row"><b>${s.n}</b><span class="${s.a?'ok':'no'}">${s.a?'Available':'Busy'}</span></div><div class="mu">${s.cn} · ${s.kw} kW · ${code(s)}</div><div class="row" style="margin-top:6px"><span><span class="tag">${s.net}</span> <span class="tag ${s.cn==st.veh.cn?'ok':'no'}">${s.cn==st.veh.cn?'Fits your vehicle':'Different connector'}</span></span><span>${inr(s.p)}/kWh</span></div></div>`).join("");
+  $("hist").innerHTML=st.h.length?st.h.slice(0,15).map((h,i)=>h.ty==="topup"?row("Wallet top-up","via UPI","+"+inr(h.t),"ok"):h.ty==="refund"?row(h.n,"returned to wallet","+"+inr(h.t),"ok"):row(h.n,`${h.kwh} kWh · ${h.net} · ${h.m==="u"?"UPI":"Wallet"}`,"−"+inr(h.t),"",h,i)).join(""):"<span class=\"mu\">No activity yet.</span>";
+  $("mph").textContent=st.phone;$("mveh").textContent=`${st.veh.make} ${st.veh.model} · ${st.veh.plate}`;$("mcn").textContent="Connector: "+st.veh.cn;
+  $("demo").innerHTML=S.map(s=>`<button data-c="${code(s)}">${code(s)} · ${s.net}</button>`).join("");
 }
+$("list").onclick=e=>{const c=e.target.closest("[data-id]");c&&pre(S.find(s=>s.id==c.dataset.id))};
+$("demo").onclick=e=>{const c=e.target.dataset.c;c&&hit(c)};
+$("ev").onclick=()=>{$("app").hidden=true;$("onb").hidden=false;step(3)};
+$("lo").onclick=()=>{st={phone:"",veh:null,bal:0,h:[]};save();boot()};
 
-function updateProgress(){
-  const boxes = document.querySelectorAll('.chk');
-  let done = 0;
-  boxes.forEach(b => { if(b.classList.contains('on')) done++; });
-  document.getElementById('pnum').textContent = done;
-  document.getElementById('pbar').style.width = totalTopics ? (done/totalTopics*100)+'%' : '0%';
+/* refunds with approval */
+$("hist").onclick=e=>{const i=e.target.dataset.i;if(i===undefined)return;const h=st.h[i];if(!h||h.r)return;
+  h.r=1;save();render();toast("Refund requested. Waiting for the station network to approve.");setTimeout(()=>approve(h),3000)};
+function approve(h){if(h.r!==1)return;h.r=2;st.bal+=h.t;st.h.unshift({ty:"refund",n:"Refund approved · "+h.n,t:h.t});save();render();toast(inr(h.t)+" refunded to your wallet.")}
 
-  document.querySelectorAll('.day').forEach(dayEl => {
-    const checks = dayEl.querySelectorAll('.chk');
-    const on = dayEl.querySelectorAll('.chk.on').length;
-    const counter = dayEl.querySelector('[data-count]');
-    if(counter) counter.textContent = `${on}/${checks.length}`;
-  });
-}
+/* top-up via UPI */
+$("addm").onclick=()=>{$("tamt").value=500;$("tmsg").textContent="";$("tgo").disabled=false;$("tsheet").style.display="flex"};
+$("tx").onclick=()=>$("tsheet").style.display="none";
+document.querySelectorAll("#tsheet [data-v]").forEach(b=>b.onclick=()=>$("tamt").value=b.dataset.v);
+$("tgo").onclick=()=>{const a=+$("tamt").value,v=$("vpa").value.trim(),m=$("tmsg");
+  if(!(a>=10&&a<=100000)){m.className="msg no";m.textContent="Enter an amount between ₹10 and ₹1,00,000.";return}
+  if(!/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(v)){m.className="msg no";m.textContent="Enter a valid UPI ID, like name@upi.";return}
+  // Real app: open upi://pay?pa=<merchant>&am=<amount>&cu=INR and credit only after the gateway confirms.
+  $("tgo").disabled=true;m.className="msg";m.textContent="Waiting for UPI approval…";
+  setTimeout(()=>{st.bal+=a;st.h.unshift({ty:"topup",t:a});save();render();m.className="msg ok";m.textContent=inr(a)+" added to your wallet."},1500)};
 
-(async () => {
-  const state = await loadState();
-  document.querySelectorAll('.chk').forEach(box => {
-    const key = box.getAttribute('data-key');
-    if(state['chk:'+key]){
-      box.classList.add('on');
-      const nameEl = box.parentElement.querySelector('[data-name]');
-      if(nameEl) nameEl.classList.add('done');
-    }
-    box.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const isOn = box.classList.toggle('on');
-      const nameEl = box.parentElement.querySelector('[data-name]');
-      if(nameEl) nameEl.classList.toggle('done', isOn);
-      updateProgress();
-      try{ await window.storage.set('chk:'+key, String(isOn), false); }catch(err){}
-    });
-  });
-  updateProgress();
-})();
+/* QR scanning */
+async function startCam(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  const v=$("vid");v.srcObject=stream;await v.play();$("cmsg").textContent="Point at the charger’s QR code";loop()}
+  catch(e){$("cmsg").textContent="Live camera is blocked in this view. Tap “Take a photo of the QR” instead, or enter a code below."}}
+function loop(){const v=$("vid"),c=$("cv"),x=c.getContext("2d",{willReadFrequently:true});
+  raf=requestAnimationFrame(function f(){
+    if(v.readyState>=2&&window.jsQR){c.width=v.videoWidth;c.height=v.videoHeight;x.drawImage(v,0,0);
+      const r=jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height);if(r&&hit(r.data))return}
+    raf=requestAnimationFrame(f)})}
+function stopCam(){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+function hit(txt){const m=/CO-(\d{4})/i.exec(txt),s=m&&S.find(s=>code(s)==m[0].toUpperCase());
+  if(!s){if(!stream)toast("Code not recognised. Try CO-1001.");return false}
+  stopCam();pre(s);return true}
+$("cam").onclick=startCam;
+$("qb").onclick=()=>$("qf").click();
+$("qf").onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();
+  fr.onload=()=>{const im=new Image();im.onload=()=>{const c=$("cv"),x=c.getContext("2d",{willReadFrequently:true}),sc=Math.min(1,1200/Math.max(im.width,im.height));
+    c.width=im.width*sc;c.height=im.height*sc;x.drawImage(im,0,0,c.width,c.height);
+    const r=window.jsQR&&jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height);
+    if(!r||!hit(r.data))toast("Couldn’t read a ChargeOne QR in that photo. Try again, closer and steadier.")};im.src=fr.result};
+  fr.readAsDataURL(f);e.target.value=""};$("mgo").onclick=()=>hit($("mc").value.trim());
+
+/* start charging */
+function pre(s){if(!s.a){toast(s.n+" is busy right now.");return}
+  cur=s;$("pn").textContent=s.n;$("pm").textContent=`${s.net} · ${s.cn} · ${s.kw} kW · ${code(s)}`;
+  $("pv").textContent=`${st.veh.make} ${st.veh.model} · ${st.veh.plate} · ${st.veh.cn}`;$("pre").style.display="flex";calc()}
+function calc(){const k=+$("rg").value,t=k*cur.p*(1+FEE),bad=cur.cn!==st.veh.cn,short=method()==="w"&&t>st.bal;
+  $("kw").textContent=k;$("tot").textContent=inr(t);$("go").disabled=bad||short;
+  $("msg").className="msg no";$("msg").textContent=bad?`This charger uses ${cur.cn}; your vehicle uses ${st.veh.cn}.`:short?"Not enough wallet balance. Top up or pay with UPI.":"";
+  return{k,t}}
+$("rg").oninput=calc;document.querySelectorAll("input[name=m]").forEach(r=>r.onchange=calc);
+$("px").onclick=()=>$("pre").style.display="none";
+$("go").onclick=()=>{const{k,t}=calc(),m=method();if(m==="w"&&t>st.bal)return;
+  const begin=()=>{if(m==="w")st.bal-=t;save();ss={s:cur,k,t,m,d:0,done:0};$("pre").style.display="none";live();ss.iv=setInterval(tick,1000)};
+  if(m==="w")begin();else{$("go").disabled=true;$("msg").className="msg";$("msg").textContent="Waiting for UPI approval…";setTimeout(begin,1500)}};
+
+/* live session */
+function live(){$("ls").textContent=`${ss.s.n} · ${ss.s.net}`;$("lt").textContent="Charging…";$("stopb").textContent="Stop charging";$("lmsg").textContent="";paint();$("live").style.display="flex"}
+function paint(){$("ld").textContent=ss.d.toFixed(2)+" kWh";$("lb").style.width=(ss.d/ss.k*100)+"%";$("lc").textContent=inr(ss.d*ss.s.p*(1+FEE))}
+function tick(){ss.d=Math.min(ss.k,ss.d+ss.s.kw/3600*30);paint();if(ss.d>=ss.k)stop()} // demo runs 30x faster than real time
+function stop(){if(ss.done)return;clearInterval(ss.iv);ss.done=1;const{s,t,m,d}=ss,cost=d*s.p*(1+FEE),un=t-cost;
+  st.h.unshift({ty:"pay",n:s.n,net:s.net,kwh:+d.toFixed(2),t:+cost.toFixed(2),m});
+  if(un>.005){st.bal+=un;st.h.unshift({ty:"refund",n:"Unused balance · "+s.n,t:+un.toFixed(2)})}
+  save();render();$("lt").textContent="Charging complete";$("stopb").textContent="Done";
+  $("lmsg").textContent=`Charged ${d.toFixed(2)} kWh for ${inr(cost)}`+(un>.005?`. ${inr(un)} returned to your wallet.`:".")}
+$("stopb").onclick=()=>{if(ss&&ss.done){$("live").style.display="none";go("wallet")}else stop()};
+
+st.h.filter(h=>h.r===1).forEach(h=>setTimeout(()=>approve(h),3000));
+boot();
 </script>
+<script src="config.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="api.js"></script>
 </body>
 </html>

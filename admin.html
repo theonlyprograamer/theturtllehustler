@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChargeOne Admin</title>
+<style>
+:root{--bg:#f6f7f4;--card:#fff;--tx:#14201a;--mu:#66726b;--ac:#0f9d58;--bd:#e2e6e1;--bad:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#101512;--card:#1a211d;--tx:#eaf0ec;--mu:#97a39b;--ac:#2ecc71;--bd:#2a332d;--bad:#ff7a6b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px}
+input,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+button{cursor:pointer;background:var(--card)}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.r{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.mu{color:var(--mu);font-size:13px}.no{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left}.sc{overflow-x:auto}
+</style></head><body>
+<h2>⚡ ChargeOne Admin</h2>
+<div id="lg" class="card"><div class="r"><input id="u" placeholder="Username" autocapitalize="none"><input id="pw" type="password" placeholder="Password"><button class="p" id="li">Log in</button></div><div class="mu no" id="le"></div></div>
+<div id="ad" hidden>
+  <div class="r"><button data-t="ref">Refunds</button><button data-t="usr">Users</button><button data-t="stn">Stations</button><button data-t="led">Ledger</button><button id="lo">Log out</button></div>
+  <div id="out"></div>
+</div>
+<script src="config.js"></script>
+<script>
+let T="",D=null,tab="ref";const $=i=>document.getElementById(i),e=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(a,d={}){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({a,t:T,...d})});const j=await r.json();if(j.err)throw new Error(j.err);return j}
+async function load(){D=await api("adminData");show()}
+function show(){const o=$("out");
+ if(tab=="ref")o.innerHTML=D.pending.length?D.pending.map(p=>`<div class="card"><b>₹${e(p.amt)}</b> · ${e(p.n)}<div class="mu">${e(p.uid)}</div><div class="r"><button class="p" data-ok="1" data-id="${e(p.id)}">Approve</button><button data-ok="0" data-id="${e(p.id)}">Reject</button></div></div>`).join(""):'<div class="card mu">No pending refunds.</div>';
+ if(tab=="usr")o.innerHTML='<div class="card sc"><table><tr><th>ID</th><th>Phone</th><th>Vehicle</th><th>Balance</th><th></th></tr>'+D.users.map(u=>`<tr><td>${e(u.id)}</td><td>${e(u.phone)}</td><td>${u.veh?e(u.veh.make+" "+u.veh.model+" "+u.veh.plate):""}</td><td>₹${e(u.bal)}</td><td><button data-cr="${e(u.id)}">Add credit</button></td></tr>`).join("")+"</table></div>";
+ if(tab=="stn")o.innerHTML=D.stations.concat([{id:0,n:"",net:"",cn:"CCS2",kw:30,p:15,a:1}]).map(s=>`<div class="card r" data-s="${s.id}"><input data-f="n" value="${e(s.n)}" placeholder="Station name"><input data-f="net" value="${e(s.net)}" placeholder="Network" size="10"><input data-f="cn" value="${e(s.cn)}" size="7"><input data-f="kw" value="${e(s.kw)}" size="4" title="kW"><input data-f="p" value="${e(s.p)}" size="4" title="₹/kWh"><input data-f="a" value="${e(s.a)}" size="2" title="1=available, 0=busy"><button class="p" data-sv="1">${s.id?"Save":"Add"}</button></div>`).join("")+'<div class="mu">Connector: CCS2, Type 2 or CHAdeMO · kW · ₹ per kWh · available 1/0</div>';
+ if(tab=="led")o.innerHTML='<div class="card sc"><table><tr><th>Time</th><th>User</th><th>Type</th><th>₹</th><th>Note</th></tr>'+D.ledger.map(x=>`<tr><td>${e(String(x.ts).slice(0,16))}</td><td>${e(x.uid)}</td><td>${e(x.type)}</td><td>${e(x.amount)}</td><td>${e(x.note)}</td></tr>`).join("")+"</table></div>"}
+$("li").onclick=async()=>{try{T=(await api("adminLogin",{user:$("u").value,pass:$("pw").value})).token;$("lg").hidden=true;$("ad").hidden=false;await load()}catch(x){$("le").textContent=x.message}};
+$("lo").onclick=()=>{T="";D=null;$("ad").hidden=true;$("lg").hidden=false;$("pw").value=""};
+document.addEventListener("click",async ev=>{const b=ev.target;if(!b.closest("#ad"))return;try{
+ if(b.dataset.t){tab=b.dataset.t;await load()}
+ if(b.dataset.id){await api("adminRefund",{id:b.dataset.id,ok:b.dataset.ok==="1"});await load()}
+ if(b.dataset.cr){const a=prompt("Credit amount (₹)");if(a){await api("adminAdjust",{uid:b.dataset.cr,amount:a,note:prompt("Note","Admin credit")||"Admin credit"});await load();alert("Done")}}
+ if(b.dataset.sv){const row=b.closest("[data-s]"),s={id:+row.dataset.s};row.querySelectorAll("[data-f]").forEach(i=>s[i.dataset.f]=i.value);await api("adminStation",{s});await load()}
+}catch(x){alert(x.message)}});
+</script></body></html>
