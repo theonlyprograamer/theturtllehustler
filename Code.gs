@@ -81,7 +81,7 @@ function check(t) {
 }
 
 /* ---------- web app entry ---------- */
-function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 7 (owner login)"); }
+function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 8 (owner console)"); }
 function doPost(e) {
   let out;
   const L = LockService.getScriptLock();
@@ -301,6 +301,10 @@ function admin(a, d) {
     if (row) ["n", "net", "cn", "kw", "p", "a"].forEach(c => setCell("Stations", row._r, c, x[c]));
     else put("Stations", { id: Math.max(0, ...all("Stations").map(r => +r.id)) + 1, n: x.n, net: x.net, cn: x.cn, kw: x.kw, p: x.p, a: x.a });
     return { ok: 1 };
+  }
+  if (a === "adminStationDel") {
+    const row = all("Stations").find(r => +r.id === +d.id); if (!row) throw "Charger not found";
+    tab("Stations").deleteRow(row._r); return { ok: 1 };
   }
   if (a === "adminAdjust") {
     const amt = +d.amount; if (!(amt > 0)) throw "Enter a positive amount";
