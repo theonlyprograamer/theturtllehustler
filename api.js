@@ -99,15 +99,11 @@ const _pre=pre;pre=function(s){_pre(s);const L=st.vl||[];if(!$("pre").style.disp
 $("pvs").onchange=async()=>{try{apply(await api("setActive",{id:$("pvs").value}));pvText();calc()}catch(x){toast(x.message)}};
 
 // Owner tools: shown only when the server says this verified account is the owner
-$("lo").insertAdjacentHTML("beforebegin",'<div id="own" hidden><div class="mu" style="margin-top:14px">Owner panel</div><div id="owu"></div><div id="ownl"></div><button class="p w" id="ocon">Open owner console</button><button class="w" id="ocu" style="margin-top:6px">Chargers used: who is on which charger</button><div class="mu" style="margin-top:6px">Top-ups, refunds, users and credit, chargers (add/edit/delete), gift codes, ledger.</div></div><div id="obn" class="mu" hidden style="margin-top:10px">Owner tools are off while DEV_MODE is on. Delete DEV_MODE in Apps Script and redeploy to use them.</div>');
+$("lo").insertAdjacentHTML("beforebegin",'<div id="own" hidden><div class="mu" style="margin-top:14px">Owner panel</div><div id="ownl"></div><button class="p w" id="ocon">Open owner console</button><div class="mu" style="margin-top:6px">Top-ups, refunds, users and credit, chargers (add/edit/delete), gift codes, ledger.</div></div><div id="obn" class="mu" hidden style="margin-top:10px">Owner tools are off while DEV_MODE is on. Delete DEV_MODE in Apps Script and redeploy to use them.</div>');
 async function drawOwn(){$("obn").hidden=!st.ob;if(!st.owner){$("own").hidden=true;return}$("own").hidden=false;
   try{const D=await api("adminData");
     const t=D.topups.map(p=>`<div class="card" style="margin:8px 0 0"><b>₹${esc(p.amt)}</b> top-up · UTR ${esc(p.id)}<div class="mu">${esc(p.uid)}. Match the UTR and amount in your bank app first.</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button class="p" data-oa="top" data-ok="1" data-id="${esc(p.id)}">Approve</button><button data-oa="top" data-ok="0" data-id="${esc(p.id)}">Reject</button></div></div>`).join("");
     const r=D.pending.map(p=>`<div class="card" style="margin:8px 0 0"><b>₹${esc(p.amt)}</b> refund · ${esc(p.n)}<div class="mu">${esc(p.uid)}</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button class="p" data-oa="ref" data-ok="1" data-id="${esc(p.id)}">Approve</button><button data-oa="ref" data-ok="0" data-id="${esc(p.id)}">Reject</button></div></div>`).join("");
-    const live=(D.live||[]).filter(x=>!x.stale);
-    $("owu").innerHTML='<div class="mu" style="margin-top:6px">Chargers right now</div>'+D.stations.map(s=>{const np=+s.pts||1,sl=Array(np).fill(null),mine=live.filter(x=>x.st===s.n);
-      mine.forEach(x=>{if(x.pt&&x.pt<=np&&!sl[x.pt-1])sl[x.pt-1]=x;else x._l=1});mine.filter(x=>x._l).forEach(x=>{const k=sl.indexOf(null);if(k>=0)sl[k]=x});
-      return `<div class="card" style="margin:8px 0 0"><b>${esc(s.n)}</b> <span class="mu">${sl.filter(Boolean).length}/${np} in use</span>`+sl.map((x,k)=>`<div class="mu">Charger ${k+1}: `+(x?`<b>${esc(x.uid)}</b> · ${esc(x.veh)}`:"free")+"</div>").join("")+"</div>"}).join("");
     $("ownl").innerHTML=(t||r)?t+r:'<div class="mu">Nothing waiting for approval.</div>'}
   catch(x){$("ownl").textContent=x.message}}
 $("ownl").onclick=async ev=>{const b=ev.target.closest("[data-oa]");if(!b)return;b.disabled=true;
@@ -115,7 +111,6 @@ $("ownl").onclick=async ev=>{const b=ev.target.closest("[data-oa]");if(!b)return
   catch(x){toast(x.message);b.disabled=false}};
 document.body.insertAdjacentHTML("beforeend",'<div id="oc" hidden style="position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column"><div class="row" style="padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px))"><b>Owner console</b><button id="occ">Close</button></div><iframe id="ocf" style="flex:1;border:0;width:100%" title="Owner console"></iframe></div>');
 $("ocon").onclick=()=>{$("ocf").src="admin.html?"+Date.now();$("oc").hidden=false};
-$("ocu").onclick=()=>{$("ocf").src="admin.html?t=use&"+Date.now();$("oc").hidden=false};
 $("occ").onclick=()=>{$("oc").hidden=true;$("ocf").src="about:blank";refresh();drawOwn()};
 const _render2=render;render=function(){_render2();if(!$("v-me").hidden)drawOwn()};
 const _go=go;go=function(v){_go(v);if(v==="me")drawOwn()};

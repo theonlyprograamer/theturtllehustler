@@ -12,7 +12,7 @@ function setup() {
     Users: ["id", "phone", "email", "veh", "created"],
     Ledger: ["id", "ts", "uid", "type", "amount", "note", "ref", "status", "r", "meta"],
     Orders: ["order_id", "uid", "amount", "status", "ts"],
-    Stations: ["id", "n", "net", "cn", "kw", "p", "a", "pts"],
+    Stations: ["id", "n", "net", "cn", "kw", "p", "a"],
     Codes: ["code", "amount", "status", "used_by", "used_ts", "for", "limit", "per_user"],
     CodeUsers: ["code", "email", "uses", "max", "last_ts"]
   };
@@ -68,13 +68,6 @@ const isOwner = id => P.getProperty("DEV_MODE") !== "1" && String(id).toLowerCas
 function all(n) { const v = tab(n).getDataRange().getValues(), h = v.shift(); return v.map((r, i) => { const o = { _r: i + 2 }; h.forEach((k, j) => o[k] = r[j]); return o; }); }
 function put(n, o) { const s = tab(n), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0]; s.appendRow(h.map(k => o[k] === undefined ? "" : o[k])); }
 function setCell(n, r, col, val) { const s = tab(n), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0]; s.getRange(r, h.indexOf(col) + 1).setValue(val); }
-
-
-/* Charger points per station: Stations.pts (default 1). Column is added automatically if missing. */
-const STALE_MS = 4 * 36e5; // an unsettled session older than this no longer blocks a charger point
-function ensurePts() { const s = tab("Stations"), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0]; if (h.indexOf("pts") < 0) s.getRange(1, h.length + 1).setValue("pts"); }
-function ptsOf(s) { return Math.max(1, Math.min(50, Math.round(+s.pts || 1))); }
-function openAt(name) { const now = Date.now(); return all("Ledger").filter(x => x.type === "hold" && x.status === "open" && (now - new Date(x.ts).getTime()) < STALE_MS && JSON.parse(x.meta || "{}").n === name); }
 
 /* ---------- tokens ---------- */
 const b64 = s => Utilities.base64EncodeWebSafe(s).replace(/=+$/, "");
@@ -166,12 +159,8 @@ function route(d) {
     const s = all("Stations").find(x => +x.id === +d.station); if (!s || !+s.a) throw "Charger unavailable";
     const v = vact(vget(u), d.vid) || {}; if (v.cn !== s.cn) throw "Connector mismatch";
     const pre = r2(k * s.p * (1 + FEE)); if (bal(id) < pre) throw "Not enough wallet balance";
-    ensurePts(); const s2 = all("Stations").find(x => +x.id === +d.station), np = ptsOf(s2), busy = openAt(s.n), taken = {}; let loose = 0;
-    busy.forEach(x => { const q = +JSON.parse(x.meta || "{}").pt; if (q) taken[q] = 1; else loose++; });
-    let pt = 0; for (let q = 1; q <= np; q++) if (!taken[q]) { if (loose > 0) { loose--; continue; } pt = q; break; }
-    if (!pt) throw "All chargers at this station are in use";
     const sid = "S" + lid();
-    put("Ledger", { id: sid, ts: new Date(), uid: id, type: "hold", amount: -pre, note: s.n, ref: sid, status: "open", r: 0, meta: JSON.stringify({ n: s.n, net: s.net, k: k, p: +s.p, kwh: 0, pt: pt }) });
+    put("Ledger", { id: sid, ts: new Date(), uid: id, type: "hold", amount: -pre, note: s.n, ref: sid, status: "open", r: 0, meta: JSON.stringify({ n: s.n, net: s.net, k: k, p: +s.p, kwh: 0 }) });
     return { sid: sid, pre: pre, bal: bal(id) };
   }
   if (a === "settle") {
@@ -276,19 +265,13 @@ function adminLogin(d) {
   return { token: sign({ a: 1, e: Date.now() + 12 * 36e5 }) };
 }
 function admin(a, d) {
-  ensurePts();
   if (a === "adminData") {
     const L = all("Ledger");
     const users = all("Users").map(u => ({ id: u.id, phone: String(u.phone), email: u.email, vl: vget(u).list, bal: bal(String(u.id)) }));
     const pending = L.filter(x => x.type === "hold" && +x.r === 1).map(x => ({ id: x.id, uid: x.uid, n: JSON.parse(x.meta).n, amt: JSON.parse(x.meta).cost }));
     const ledger = L.slice(-100).reverse().map(x => ({ ts: x.ts, uid: x.uid, type: x.type, amount: x.amount, note: x.note, status: x.status }));
     const topups = all("Orders").filter(x => x.status === "pending").map(x => ({ id: String(x.order_id), uid: x.uid, amt: +x.amount, ts: x.ts }));
-    const U = {}; all("Users").forEach(u => U[String(u.id)] = u);
-    const live = L.filter(x => x.type === "hold" && x.status === "open").map(x => { const m = JSON.parse(x.meta || "{}"), u = U[String(x.uid)] || {}, v = u.id ? (vact(vget(u)) || {}) : {};
-      return { id: x.id, ts: x.ts, uid: x.uid, phone: String(u.phone || ""), veh: v.make ? (v.make + " " + v.model + " · " + v.plate) : "", st: m.n, net: m.net, k: m.k, held: -x.amount, pt: +m.pt || 0, stale: (Date.now() - new Date(x.ts).getTime()) >= STALE_MS }; }).reverse();
-    const usage = L.filter(x => x.type === "hold").slice(-300).reverse().map(x => { const m = JSON.parse(x.meta || "{}"), u = U[String(x.uid)] || {}, v = u.id ? (vact(vget(u)) || {}) : {};
-      return { ts: x.ts, uid: x.uid, phone: String(u.phone || ""), veh: v.make ? (v.make + " " + v.model + " · " + v.plate) : "", st: m.n, net: m.net, kwh: +m.kwh || 0, cost: m.cost != null ? m.cost : -x.amount, open: x.status === "open", pt: +m.pt || 0, stale: x.status === "open" && (Date.now() - new Date(x.ts).getTime()) >= STALE_MS }; });
-    return { usage: usage, live: live, users: users, pending: pending, topups: topups, codes: all("Codes").map(x => ({ code: x.code, amount: +x.amount, status: x.status, by: x.used_by, f: x["for"] })), ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a, pts: ptsOf(s) })) };
+    return { users: users, pending: pending, topups: topups, codes: all("Codes").map(x => ({ code: x.code, amount: +x.amount, status: x.status, by: x.used_by, f: x["for"] })), ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a })) };
   }
   if (a === "adminRefund") {
     const h = all("Ledger").find(x => x.id === d.id && +x.r === 1); if (!h) throw "Not pending";
@@ -315,9 +298,8 @@ function admin(a, d) {
   }
   if (a === "adminStation") {
     const x = d.s, row = all("Stations").find(r => +r.id === +x.id);
-    x.pts = Math.max(1, Math.min(50, Math.round(+x.pts || 1)));
-    if (row) ["n", "net", "cn", "kw", "p", "a", "pts"].forEach(c => setCell("Stations", row._r, c, x[c]));
-    else put("Stations", { id: Math.max(0, ...all("Stations").map(r => +r.id)) + 1, n: x.n, net: x.net, cn: x.cn, kw: x.kw, p: x.p, a: x.a, pts: x.pts });
+    if (row) ["n", "net", "cn", "kw", "p", "a"].forEach(c => setCell("Stations", row._r, c, x[c]));
+    else put("Stations", { id: Math.max(0, ...all("Stations").map(r => +r.id)) + 1, n: x.n, net: x.net, cn: x.cn, kw: x.kw, p: x.p, a: x.a });
     return { ok: 1 };
   }
   if (a === "adminStationDel") {
