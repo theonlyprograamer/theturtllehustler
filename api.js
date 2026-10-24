@@ -4,7 +4,7 @@ let tmpEm="";
 async function api(a,d={}){
   const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({a,t:st.token,...d})});
   const j=await r.json();if(j.err)throw new Error(j.err);return j}
-function apply(s){st.bal=s.bal;st.veh=s.veh;st.h=s.h;if(s.stations){S.length=0;S.push(...s.stations)}save()}
+function apply(s){st.bal=s.bal;st.veh=s.veh;st.vl=s.vl||[];st.h=s.h;if(s.stations){S.length=0;S.push(...s.stations)}save()}
 async function refresh(){if(!st.token)return;
   try{apply(await api("state"));render()}catch(e){if(e.message==="auth"){st={phone:"",veh:null,bal:0,h:[]};save();boot()}}}
 function approve(){} // refunds are now approved by the admin, not by a timer
@@ -32,7 +32,7 @@ $("b3").onclick=async()=>{const m=$("m3"),pl=$("vpl").value.trim().toUpperCase()
   m.className="msg no";
   if(!mk||!md){m.textContent="Enter your vehicle make and model.";return}
   if(!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(pl)){m.textContent="Enter a valid plate, like KL07AB1234.";return}
-  try{apply(await api("saveVehicle",{veh:{make:mk,model:md,plate:pl,cn:$("vcn").value}}));boot()}catch(e){m.textContent=e.message}};
+  try{apply(await api("saveVehicle",{veh:{id:editId,type:$("vty").value,make:mk,model:md,plate:pl,cn:$("vcn").value}}));editId=null;boot()}catch(e){m.textContent=e.message}};
 
 // UPI top-up: pay to the owner's UPI ID, then submit the 12-digit UTR; admin approves
 $("tgo").textContent="Pay with UPI app";
@@ -55,7 +55,7 @@ $("gcb").onclick=async()=>{const m=$("gcm"),b=$("gcb"),before=st.bal;b.disabled=
 
 // Charging: server holds the money, then settles on stop
 $("go").onclick=async()=>{const{k}=calc();$("go").disabled=true;$("msg").className="msg";$("msg").textContent="Starting…";
-  try{const r=await api("pay",{station:cur.id,kwh:k});st.bal=r.bal;save();
+  try{const r=await api("pay",{station:cur.id,kwh:k,vid:st.veh&&st.veh.id});st.bal=r.bal;save();
     ss={s:cur,k,t:r.pre,m:"w",d:0,done:0,sid:r.sid};$("pre").style.display="none";live();ss.iv=setInterval(tick,1000);render()}
   catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
 async function stop(){if(ss.done)return;clearInterval(ss.iv);ss.done=1;$("stopb").disabled=true;
@@ -68,6 +68,35 @@ async function stop(){if(ss.done)return;clearInterval(ss.iv);ss.done=1;$("stopb"
 // Refund requests wait for admin approval
 $("hist").onclick=async e=>{const i=e.target.dataset.i;if(i===undefined)return;const h=st.h[i];if(!h||h.r)return;
   try{apply(await api("refundRequest",{id:h.id}));render();toast("Refund requested. It’s credited to your wallet once approved.")}catch(x){toast(x.message)}};
+
+// Multiple vehicles (cars, bikes, scooters...)
+const ICON={Car:"🚗",Bike:"🏍️",Scooter:"🛵","Auto-rickshaw":"🛺",Other:"🚙"};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let editId=null;
+$("vmk").insertAdjacentHTML("beforebegin",'<select id="vty"><option>Car</option><option>Bike</option><option>Scooter</option><option>Auto-rickshaw</option><option>Other</option></select>');
+$("b3").insertAdjacentHTML("afterend",'<button class="w" id="vcc" hidden>Cancel</button>');
+$("mveh").previousElementSibling.hidden=true;$("mveh").hidden=true;$("mcn").hidden=true;
+$("ev").insertAdjacentHTML("beforebegin",'<div class="mu" style="margin-top:10px">My vehicles</div><div id="vl"></div>');
+$("ev").textContent="+ Add another vehicle";
+function openVeh(v){editId=v?v.id:null;$("app").hidden=true;$("onb").hidden=false;step(3);
+  $("vty").value=v?(v.type||"Car"):"Car";$("vmk").value=v?v.make:"";$("vmd").value=v?v.model:"";$("vpl").value=v?v.plate:"";$("vcn").value=v?v.cn:"CCS2";
+  $("m3").textContent="";$("vcc").hidden=!st.veh}
+$("ev").onclick=()=>openVeh(null);
+$("vcc").onclick=()=>{editId=null;boot()};
+function drawVeh(){$("vl").innerHTML=(st.vl||[]).map(v=>{const on=st.veh&&st.veh.id===v.id;
+  return `<div class="card" style="margin:8px 0 0"><div class="row"><b>${ICON[v.type]||"🚗"} ${esc(v.make)} ${esc(v.model)}</b>${on?'<span class="tag ok">In use</span>':`<button data-vi="use" data-id="${esc(v.id)}">Use</button>`}</div><div class="mu">${esc(v.type||"Car")} · ${esc(v.plate)} · ${esc(v.cn)}</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button data-vi="edit" data-id="${esc(v.id)}">Edit</button><button data-vi="del" data-id="${esc(v.id)}">Remove</button></div></div>`}).join("")}
+const _render=render;render=function(){_render();drawVeh()};
+$("vl").onclick=async ev=>{const b=ev.target.closest("[data-vi]");if(!b)return;const id=b.dataset.id,k=b.dataset.vi;
+  try{if(k==="use"){apply(await api("setActive",{id}));render()}
+    else if(k==="edit")openVeh(st.vl.find(x=>x.id===id));
+    else if(k==="del"&&confirm("Remove this vehicle?")){apply(await api("deleteVehicle",{id}));st.veh?render():boot()}}
+  catch(x){toast(x.message)}};
+// switch vehicle right on the charging screen
+$("pv").insertAdjacentHTML("afterend",'<select id="pvs" hidden></select>');
+const pvText=()=>$("pv").textContent=`${st.veh.make} ${st.veh.model} · ${st.veh.plate} · ${st.veh.cn}`;
+const _pre=pre;pre=function(s){_pre(s);const L=st.vl||[];if(!$("pre").style.display||$("pre").style.display==="none")return;
+  $("pvs").hidden=L.length<2;$("pvs").innerHTML=L.map(v=>`<option value="${esc(v.id)}"${st.veh&&st.veh.id===v.id?" selected":""}>${ICON[v.type]||"🚗"} ${esc(v.make)} ${esc(v.model)} · ${esc(v.plate)}</option>`).join("")};
+$("pvs").onchange=async()=>{try{apply(await api("setActive",{id:$("pvs").value}));pvText();calc()}catch(x){toast(x.message)}};
 
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 setInterval(refresh,30000);

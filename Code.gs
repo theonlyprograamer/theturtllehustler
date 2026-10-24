@@ -12,7 +12,8 @@ function setup() {
     Users: ["id", "phone", "email", "veh", "created"],
     Ledger: ["id", "ts", "uid", "type", "amount", "note", "ref", "status", "r", "meta"],
     Orders: ["order_id", "uid", "amount", "status", "ts"],
-    Stations: ["id", "n", "net", "cn", "kw", "p", "a"]
+    Stations: ["id", "n", "net", "cn", "kw", "p", "a"],
+    Codes: ["code", "amount", "status", "used_by", "used_ts", "for"]
   };
   const ss = SpreadsheetApp.getActive();
   for (const k in defs) { const s = ss.getSheetByName(k) || ss.insertSheet(k); if (s.getLastRow() == 0) s.appendRow(defs[k]); }
@@ -25,7 +26,19 @@ function setup() {
     [5, "Technopark Campus, Trivandrum", "GreenPulse", "CCS2", 50, 16, 1],
     [6, "Aluva Metro Parking", "KeralaCharge", "CHAdeMO", 25, 14, 1]
   ].forEach(r => st.appendRow(r));
+  const cs = ss.getSheetByName("Codes");
+  if (cs.getLastRow() == 1) cs.appendRow(["MATHEWS_2009+5", 500, "unlimited", "", "", "mathewsmelvinhere@gmail.com"]);
   if (!P.getProperty("SECRET")) P.setProperty("SECRET", Utilities.getUuid() + Utilities.getUuid());
+}
+
+/* Run ONCE if you already ran an older setup(): makes MATHEWS_2009+5 unlimited and owner-only. */
+function upgradeCodes() {
+  const s = tab("Codes"); s.getRange(1, 6).setValue("for");
+  const v = s.getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) if (String(v[i][0]).toUpperCase() === "MATHEWS_2009+5") {
+    s.getRange(i + 1, 3).setValue("unlimited"); s.getRange(i + 1, 6).setValue("mathewsmelvinhere@gmail.com"); s.getRange(i + 1, 4, 1, 2).clearContent(); return;
+  }
+  s.appendRow(["MATHEWS_2009+5", 500, "unlimited", "", "", "mathewsmelvinhere@gmail.com"]);
 }
 
 /* ---------- sheet helpers ---------- */
@@ -45,7 +58,7 @@ function check(t) {
 }
 
 /* ---------- web app entry ---------- */
-function doGet() { return ContentService.createTextOutput("ChargeOne API is running"); }
+function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 4 (multi-vehicle)"); }
 function doPost(e) {
   let out;
   const L = LockService.getScriptLock();
@@ -65,30 +78,48 @@ function route(d) {
   const u = all("Users").find(x => String(x.id) === id); if (!u) throw "auth";
   if (a === "state") return state(id);
   if (a === "saveVehicle") {
-    const v = d.veh || {};
-    if (!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(String(v.plate)) || ["CCS2", "Type 2", "CHAdeMO"].indexOf(v.cn) < 0) throw "Invalid vehicle details";
-    setCell("Users", u._r, "veh", JSON.stringify({ make: String(v.make).slice(0, 30), model: String(v.model).slice(0, 30), plate: v.plate, cn: v.cn }));
+    const v = d.veh || {}, vv = vget(u), plate = String(v.plate || "").toUpperCase().replace(/\s/g, "");
+    if (!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(plate) || CONS.indexOf(v.cn) < 0 || !String(v.make || "").trim() || !String(v.model || "").trim()) throw "Invalid vehicle details";
+    const type = VTYPES.indexOf(v.type) < 0 ? "Car" : v.type, rec = { type: type, make: String(v.make).trim().slice(0, 30), model: String(v.model).trim().slice(0, 30), plate: plate, cn: v.cn };
+    const cur = v.id ? vv.list.find(x => x.id === v.id) : null;
+    if (vv.list.find(x => x.plate === plate && x !== cur)) throw "That number plate is already added";
+    if (cur) Object.assign(cur, rec);
+    else { if (vv.list.length >= 10) throw "You can add up to 10 vehicles"; rec.id = "v" + lid().slice(0, 6); vv.list.push(rec); vv.act = rec.id; }
+    vsave(u, vv); return state(id);
+  }
+  if (a === "setActive") {
+    const vv = vget(u); if (!vv.list.find(x => x.id === d.id)) throw "Vehicle not found";
+    vv.act = d.id; vsave(u, vv); return state(id);
+  }
+  if (a === "deleteVehicle") {
+    const vv = vget(u); vv.list = vv.list.filter(x => x.id !== d.id);
+    if (!vv.list.find(x => x.id === vv.act)) vv.act = vv.list[0] ? vv.list[0].id : "";
+    vsave(u, vv); return state(id);
+  }
+  if (a === "topupSubmit") {
+    const amt = Math.round(+d.amount); if (!(amt >= 10 && amt <= 100000)) throw "Invalid amount";
+    const utr = String(d.utr || "").replace(/\s/g, ""); if (!/^\d{12}$/.test(utr)) throw "Enter the 12-digit UPI reference (UTR) from your payment app";
+    if (all("Orders").find(x => String(x.order_id) === utr)) throw "This reference was already submitted";
+    if (all("Orders").filter(x => String(x.uid) === id && x.status === "pending").length >= 5) throw "Too many pending top-ups. Wait for approval.";
+    put("Orders", { order_id: "'" + utr, uid: id, amount: amt, status: "pending", ts: new Date() });
     return state(id);
   }
-  if (a === "createOrder") {
-    const amt = Math.round(+d.amount); if (!(amt >= 10 && amt <= 100000)) throw "Invalid amount";
-    const o = rz("orders", { amount: amt * 100, currency: "INR", receipt: "w" + lid() });
-    put("Orders", { order_id: o.id, uid: id, amount: amt, status: "created", ts: new Date() });
-    return { id: o.id, amount: o.amount };
-  }
-  if (a === "verifyPayment") {
-    const o = all("Orders").find(x => x.order_id === d.order_id && String(x.uid) === id); if (!o) throw "Unknown order";
-    if (o.status === "paid") return state(id);
-    const hex = Utilities.computeHmacSha256Signature(d.order_id + "|" + d.payment_id, P.getProperty("RZP_KEY_SECRET")).map(b => ("0" + (b & 255).toString(16)).slice(-2)).join("");
-    if (hex !== d.signature) throw "Payment verification failed";
-    setCell("Orders", o._r, "status", "paid");
-    put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "topup", amount: +o.amount, note: "Razorpay " + d.payment_id, ref: d.order_id, status: "ok" });
+  if (a === "redeem") {
+    const C = CacheService.getScriptCache(), k = "g" + id, n = +(C.get(k) || 0);
+    if (n >= 5) throw "Too many attempts. Try again in an hour.";
+    const code = String(d.code || "").trim().toUpperCase();
+    const g = all("Codes").find(x => String(x.code).toUpperCase() === code);
+    const unl = g && g.status === "unlimited", own = g && String(g["for"] || "").trim().toLowerCase();
+    if (!g || (g.status !== "active" && !unl) || (own && own !== id.toLowerCase())) { C.put(k, n + 1, 3600); throw "Invalid or already used code"; }
+    if (unl) { setCell("Codes", g._r, "used_by", id); setCell("Codes", g._r, "used_ts", new Date()); }
+    else { setCell("Codes", g._r, "status", "used"); setCell("Codes", g._r, "used_by", id); setCell("Codes", g._r, "used_ts", new Date()); }
+    put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "gift", amount: +g.amount, note: "Gift code " + code, ref: code, status: "ok" });
     return state(id);
   }
   if (a === "pay") {
     const k = +d.kwh; if (!(k >= 1 && k <= 100)) throw "Invalid energy amount";
     const s = all("Stations").find(x => +x.id === +d.station); if (!s || !+s.a) throw "Charger unavailable";
-    const v = u.veh ? JSON.parse(u.veh) : {}; if (v.cn !== s.cn) throw "Connector mismatch";
+    const v = vact(vget(u), d.vid) || {}; if (v.cn !== s.cn) throw "Connector mismatch";
     const pre = r2(k * s.p * (1 + FEE)); if (bal(id) < pre) throw "Not enough wallet balance";
     const sid = "S" + lid();
     put("Ledger", { id: sid, ts: new Date(), uid: id, type: "hold", amount: -pre, note: s.n, ref: sid, status: "open", r: 0, meta: JSON.stringify({ n: s.n, net: s.net, k: k, p: +s.p, kwh: 0 }) });
@@ -111,6 +142,17 @@ function route(d) {
   throw "Unknown action";
 }
 
+/* vehicles: Users.veh holds {list:[{id,type,make,model,plate,cn}], act:"<id>"}; an old single-vehicle value is upgraded on read */
+const VTYPES = ["Car", "Bike", "Scooter", "Auto-rickshaw", "Other"], CONS = ["CCS2", "Type 2", "CHAdeMO"];
+function vget(u) {
+  let o = null; try { o = u && u.veh ? JSON.parse(u.veh) : null; } catch (_) {}
+  if (!o) return { list: [], act: "" };
+  if (o.list) return { list: o.list, act: o.act || (o.list[0] ? o.list[0].id : "") };
+  return { list: [{ id: "v1", type: "Car", make: o.make, model: o.model, plate: o.plate, cn: o.cn }], act: "v1" };
+}
+function vact(vv, id) { return vv.list.find(x => x.id === (id || vv.act)) || vv.list.find(x => x.id === vv.act) || null; }
+function vsave(u, vv) { setCell("Users", u._r, "veh", vv.list.length ? JSON.stringify(vv) : ""); }
+
 function holdOf(id, ref) { const h = all("Ledger").find(x => x.id === ref && String(x.uid) === id && x.type === "hold"); if (!h) throw "Session not found"; return h; }
 function bal(id) { return r2(all("Ledger").filter(x => String(x.uid) === id).reduce((s, x) => s + (+x.amount), 0)); }
 function state(id) {
@@ -124,7 +166,8 @@ function state(id) {
     return { ty: "refund", n: "Credit · " + x.note, t: +x.amount };
   });
   const stations = all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a }));
-  return { bal: bal(id), veh: u && u.veh ? JSON.parse(u.veh) : null, h: h, stations: stations };
+  const vv = vget(u);
+  return { bal: bal(id), veh: vact(vv), vl: vv.list, act: vv.act, h: h, stations: stations };
 }
 
 /* ---------- OTP ---------- */
@@ -186,10 +229,11 @@ function adminLogin(d) {
 function admin(a, d) {
   if (a === "adminData") {
     const L = all("Ledger");
-    const users = all("Users").map(u => ({ id: u.id, phone: String(u.phone), email: u.email, veh: u.veh ? JSON.parse(u.veh) : null, bal: bal(String(u.id)) }));
+    const users = all("Users").map(u => ({ id: u.id, phone: String(u.phone), email: u.email, vl: vget(u).list, bal: bal(String(u.id)) }));
     const pending = L.filter(x => x.type === "hold" && +x.r === 1).map(x => ({ id: x.id, uid: x.uid, n: JSON.parse(x.meta).n, amt: JSON.parse(x.meta).cost }));
     const ledger = L.slice(-100).reverse().map(x => ({ ts: x.ts, uid: x.uid, type: x.type, amount: x.amount, note: x.note, status: x.status }));
-    return { users: users, pending: pending, ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a })) };
+    const topups = all("Orders").filter(x => x.status === "pending").map(x => ({ id: String(x.order_id), uid: x.uid, amt: +x.amount, ts: x.ts }));
+    return { users: users, pending: pending, topups: topups, codes: all("Codes").map(x => ({ code: x.code, amount: +x.amount, status: x.status, by: x.used_by, f: x["for"] })), ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a })) };
   }
   if (a === "adminRefund") {
     const h = all("Ledger").find(x => x.id === d.id && +x.r === 1); if (!h) throw "Not pending";
@@ -197,6 +241,21 @@ function admin(a, d) {
       put("Ledger", { id: lid(), ts: new Date(), uid: h.uid, type: "refund", amount: JSON.parse(h.meta).cost, note: JSON.parse(h.meta).n, ref: h.id, status: "ok" });
       setCell("Ledger", h._r, "r", 2);
     } else setCell("Ledger", h._r, "r", 3);
+    return { ok: 1 };
+  }
+  if (a === "adminTopup") {
+    const o = all("Orders").find(x => String(x.order_id) === String(d.id) && x.status === "pending"); if (!o) throw "Not pending";
+    if (d.ok) {
+      put("Ledger", { id: lid(), ts: new Date(), uid: String(o.uid), type: "topup", amount: +o.amount, note: "UPI " + o.order_id, ref: String(o.order_id), status: "ok" });
+      setCell("Orders", o._r, "status", "paid");
+    } else setCell("Orders", o._r, "status", "rejected");
+    return { ok: 1 };
+  }
+  if (a === "adminCode") {
+    const code = String(d.code || "").trim().toUpperCase(), amt = Math.round(+d.amount);
+    if (!/^[A-Z0-9_+\-]{4,40}$/.test(code) || !(amt > 0 && amt <= 100000)) throw "Code: 4-40 letters/numbers/_+-, amount 1-100000";
+    if (all("Codes").find(x => String(x.code).toUpperCase() === code)) throw "Code already exists";
+    put("Codes", { code: code, amount: amt, status: d.unl ? "unlimited" : "active", "for": String(d.for || "").trim().toLowerCase() });
     return { ok: 1 };
   }
   if (a === "adminStation") {
