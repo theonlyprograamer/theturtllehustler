@@ -13,7 +13,8 @@ function setup() {
     Ledger: ["id", "ts", "uid", "type", "amount", "note", "ref", "status", "r", "meta"],
     Orders: ["order_id", "uid", "amount", "status", "ts"],
     Stations: ["id", "n", "net", "cn", "kw", "p", "a"],
-    Codes: ["code", "amount", "status", "used_by", "used_ts", "for"]
+    Codes: ["code", "amount", "status", "used_by", "used_ts", "for", "limit", "per_user"],
+    CodeUsers: ["code", "email", "uses", "max", "last_ts"]
   };
   const ss = SpreadsheetApp.getActive();
   for (const k in defs) { const s = ss.getSheetByName(k) || ss.insertSheet(k); if (s.getLastRow() == 0) s.appendRow(defs[k]); }
@@ -41,6 +42,28 @@ function upgradeCodes() {
   s.appendRow(["MATHEWS_2009+5", 500, "unlimited", "", "", "mathewsmelvinhere@gmail.com"]);
 }
 
+/* Run ONCE: adds the universal code (each account can use it once, up to "limit" accounts in total). */
+function addUniversalCode() {
+  const s = tab("Codes"); s.getRange(1, 7).setValue("limit"); s.getRange(1, 8).setValue("per_user");
+  const v = s.getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) if (String(v[i][0]) === "#5PDBG") return;
+  s.appendRow(["#5PDBG", 500, "universal", "", "", "", 100, 1]);
+}
+
+/* Run ONCE: adds the per-user limit system (CodeUsers tab + per_user column). */
+function upgradeV6() {
+  const ss = SpreadsheetApp.getActive();
+  const cu = ss.getSheetByName("CodeUsers") || ss.insertSheet("CodeUsers");
+  if (cu.getLastRow() == 0) cu.appendRow(["code", "email", "uses", "max", "last_ts"]);
+  const s = tab("Codes"); s.getRange(1, 7).setValue("limit"); s.getRange(1, 8).setValue("per_user");
+  const v = s.getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) if (v[i][2] === "universal" && String(v[i][7]) === "") s.getRange(i + 1, 8).setValue(1);
+}
+
+/* Owner = the verified account whose id equals OWNER_ID (Script property; default below). Disabled while DEV_MODE=1. */
+const OWNER = () => String(P.getProperty("OWNER_ID") || "mathewsmelvinhere@gmail.com").trim().toLowerCase();
+const isOwner = id => P.getProperty("DEV_MODE") !== "1" && String(id).toLowerCase() === OWNER();
+
 /* ---------- sheet helpers ---------- */
 function all(n) { const v = tab(n).getDataRange().getValues(), h = v.shift(); return v.map((r, i) => { const o = { _r: i + 2 }; h.forEach((k, j) => o[k] = r[j]); return o; }); }
 function put(n, o) { const s = tab(n), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0]; s.appendRow(h.map(k => o[k] === undefined ? "" : o[k])); }
@@ -58,7 +81,7 @@ function check(t) {
 }
 
 /* ---------- web app entry ---------- */
-function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 4 (multi-vehicle)"); }
+function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 7 (owner login)"); }
 function doPost(e) {
   let out;
   const L = LockService.getScriptLock();
@@ -73,7 +96,7 @@ function route(d) {
   if (a === "sendOtp") return sendOtp(d);
   if (a === "verifyOtp") return verifyOtp(d);
   if (a === "adminLogin") return adminLogin(d);
-  if (a.indexOf("admin") === 0) { if (!check(d.t).a) throw "auth"; return admin(a, d); }
+  if (a.indexOf("admin") === 0) { const t = check(d.t); if (!(t.a || (t.p && isOwner(t.p)))) throw "auth"; return admin(a, d); }
   const id = check(d.t).p; if (!id) throw "auth";
   const u = all("Users").find(x => String(x.id) === id); if (!u) throw "auth";
   if (a === "state") return state(id);
@@ -105,12 +128,27 @@ function route(d) {
     return state(id);
   }
   if (a === "redeem") {
-    const C = CacheService.getScriptCache(), k = "g" + id, n = +(C.get(k) || 0);
+    const C = CacheService.getScriptCache(), k = "g" + id, n = +(C.get(k) || 0), gn = +(C.get("gall") || 0);
     if (n >= 5) throw "Too many attempts. Try again in an hour.";
-    const code = String(d.code || "").trim().toUpperCase();
-    const g = all("Codes").find(x => String(x.code).toUpperCase() === code);
-    const unl = g && g.status === "unlimited", own = g && String(g["for"] || "").trim().toLowerCase();
-    if (!g || (g.status !== "active" && !unl) || (own && own !== id.toLowerCase())) { C.put(k, n + 1, 3600); throw "Invalid or already used code"; }
+    if (gn >= 40) throw "Gift codes are busy right now. Try again in an hour.";
+    const raw = String(d.code || "").trim(), code = raw.toUpperCase(), G = all("Codes");
+    const bad = () => { C.put(k, n + 1, 3600); C.put("gall", gn + 1, 3600); throw "Invalid or already used code"; };
+    // universal codes are case-sensitive; other codes are not
+    const g = G.find(x => String(x.code) === raw) || G.find(x => x.status !== "universal" && String(x.code).toUpperCase() === code);
+    if (!g) bad();
+    if (g.status === "universal") {
+      const em = id.toLowerCase(), r = all("CodeUsers").find(x => String(x.code) === String(g.code) && String(x.email).trim().toLowerCase() === em);
+      const def = +g.per_user > 0 ? +g.per_user : 1, mx = r && String(r.max) !== "" ? +r.max : def, uses = r ? (+r.uses || 0) : 0;
+      if (uses >= mx) throw "You have used this code the maximum number of times";
+      if (+g.limit > 0 && all("Ledger").filter(x => x.type === "gift" && String(x.ref) === String(g.code)).length >= +g.limit) bad();
+      put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "gift", amount: +g.amount, note: "Gift code", ref: String(g.code), status: "ok" });
+      if (r) { setCell("CodeUsers", r._r, "uses", uses + 1); setCell("CodeUsers", r._r, "last_ts", new Date()); if (String(r.max) === "") setCell("CodeUsers", r._r, "max", mx); }
+      else put("CodeUsers", { code: String(g.code), email: em, uses: 1, max: mx, last_ts: new Date() });
+      setCell("Codes", g._r, "used_by", id); setCell("Codes", g._r, "used_ts", new Date());
+      return state(id);
+    }
+    const unl = g.status === "unlimited", own = String(g["for"] || "").trim().toLowerCase();
+    if ((g.status !== "active" && !unl) || (own && own !== id.toLowerCase())) bad();
     if (unl) { setCell("Codes", g._r, "used_by", id); setCell("Codes", g._r, "used_ts", new Date()); }
     else { setCell("Codes", g._r, "status", "used"); setCell("Codes", g._r, "used_by", id); setCell("Codes", g._r, "used_ts", new Date()); }
     put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "gift", amount: +g.amount, note: "Gift code " + code, ref: code, status: "ok" });
@@ -167,7 +205,7 @@ function state(id) {
   });
   const stations = all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a }));
   const vv = vget(u);
-  return { bal: bal(id), veh: vact(vv), vl: vv.list, act: vv.act, h: h, stations: stations };
+  return { bal: bal(id), veh: vact(vv), vl: vv.list, act: vv.act, owner: isOwner(id), ob: P.getProperty("DEV_MODE") === "1" && String(id).toLowerCase() === OWNER(), h: h, stations: stations };
 }
 
 /* ---------- OTP ---------- */

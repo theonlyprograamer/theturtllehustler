@@ -4,7 +4,7 @@ let tmpEm="";
 async function api(a,d={}){
   const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({a,t:st.token,...d})});
   const j=await r.json();if(j.err)throw new Error(j.err);return j}
-function apply(s){st.bal=s.bal;st.veh=s.veh;st.vl=s.vl||[];st.h=s.h;if(s.stations){S.length=0;S.push(...s.stations)}save()}
+function apply(s){st.bal=s.bal;st.veh=s.veh;st.vl=s.vl||[];st.owner=!!s.owner;st.ob=!!s.ob;st.h=s.h;if(s.stations){S.length=0;S.push(...s.stations)}save()}
 async function refresh(){if(!st.token)return;
   try{apply(await api("state"));render()}catch(e){if(e.message==="auth"){st={phone:"",veh:null,bal:0,h:[]};save();boot()}}}
 function approve(){} // refunds are now approved by the admin, not by a timer
@@ -36,11 +36,11 @@ $("b3").onclick=async()=>{const m=$("m3"),pl=$("vpl").value.trim().toUpperCase()
 
 // UPI top-up: pay to the owner's UPI ID, then submit the 12-digit UTR; admin approves
 $("tgo").textContent="Pay with UPI app";
-$("tgo").insertAdjacentHTML("afterend",'<div id="ub" hidden><div class="mu" id="ut" style="margin:8px 0"></div><input type="text" id="utr" inputmode="numeric" maxlength="12" placeholder="12-digit UTR / reference no."><button class="p w" id="usub">I have paid. Submit</button></div>');
+$("tgo").insertAdjacentHTML("afterend",'<div id="ub" hidden><img id="uqr" src="qr.png" alt="Scan to pay" style="display:block;width:220px;max-width:100%;margin:10px auto;border-radius:10px;background:#fff" onerror="this.hidden=true"><div class="mu" id="ut" style="margin:8px 0"></div><input type="text" id="utr" inputmode="numeric" maxlength="12" placeholder="12-digit UTR / reference no."><button class="p w" id="usub">I have paid. Submit</button></div>');
 $("tgo").onclick=()=>{const a=Math.round(+$("tamt").value),m=$("tmsg");
   if(!(a>=10&&a<=100000)){m.className="msg no";m.textContent="Enter an amount between ₹10 and ₹1,00,000.";return}
   const link="upi://pay?pa="+encodeURIComponent(UPI_ID)+"&pn="+encodeURIComponent(UPI_NAME)+"&am="+a+"&cu=INR&tn="+encodeURIComponent("ChargeOne wallet");
-  $("ut").innerHTML="Pay <b>"+inr(a)+"</b> to UPI ID <b>"+UPI_ID+"</b>, then enter the 12-digit reference (UTR) from your payment app.";
+  $("ut").innerHTML="Scan the QR (or pay to UPI ID <b>"+UPI_ID+"</b>) and pay exactly <b>"+inr(a)+"</b>. Then enter the 12-digit reference (UTR) from your payment app.";
   $("ub").hidden=false;m.className="msg";m.textContent="";location.href=link};
 $("usub").onclick=async()=>{const m=$("tmsg"),a=Math.round(+$("tamt").value);
   try{apply(await api("topupSubmit",{amount:a,utr:$("utr").value.trim()}));render();$("utr").value="";$("ub").hidden=true;
@@ -48,7 +48,7 @@ $("usub").onclick=async()=>{const m=$("tmsg"),a=Math.round(+$("tamt").value);
   catch(e){m.className="msg no";m.textContent=e.message}};
 
 // Gift / promo code redeem
-$("tmsg").insertAdjacentHTML("afterend",'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd,#2a332d)"><div class="mu">Have a gift code?</div><input type="text" id="gc" placeholder="Enter gift code" autocapitalize="characters" autocomplete="off"><button class="p w" id="gcb">Redeem</button><div class="msg" id="gcm"></div></div>');
+$("tmsg").insertAdjacentHTML("afterend",'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd,#2a332d)"><div class="mu">Have a gift code?</div><input type="text" id="gc" placeholder="Enter gift code" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"><button class="p w" id="gcb">Redeem</button><div class="msg" id="gcm"></div></div>');
 $("gcb").onclick=async()=>{const m=$("gcm"),b=$("gcb"),before=st.bal;b.disabled=true;m.className="msg";m.textContent="Checking…";
   try{apply(await api("redeem",{code:$("gc").value.trim()}));render();$("gc").value="";m.className="msg ok";m.textContent=inr(st.bal-before)+" added to your wallet."}
   catch(e){m.className="msg no";m.textContent=e.message}b.disabled=false};
@@ -97,6 +97,20 @@ const pvText=()=>$("pv").textContent=`${st.veh.make} ${st.veh.model} · ${st.veh
 const _pre=pre;pre=function(s){_pre(s);const L=st.vl||[];if(!$("pre").style.display||$("pre").style.display==="none")return;
   $("pvs").hidden=L.length<2;$("pvs").innerHTML=L.map(v=>`<option value="${esc(v.id)}"${st.veh&&st.veh.id===v.id?" selected":""}>${ICON[v.type]||"🚗"} ${esc(v.make)} ${esc(v.model)} · ${esc(v.plate)}</option>`).join("")};
 $("pvs").onchange=async()=>{try{apply(await api("setActive",{id:$("pvs").value}));pvText();calc()}catch(x){toast(x.message)}};
+
+// Owner tools: shown only when the server says this verified account is the owner
+$("lo").insertAdjacentHTML("beforebegin",'<div id="own" hidden><div class="mu" style="margin-top:14px">Owner panel</div><div id="ownl"></div><a href="admin.html" style="display:block;margin-top:8px;font-size:13px">Open full admin panel</a></div><div id="obn" class="mu" hidden style="margin-top:10px">Owner tools are off while DEV_MODE is on. Delete DEV_MODE in Apps Script and redeploy to use them.</div>');
+async function drawOwn(){$("obn").hidden=!st.ob;if(!st.owner){$("own").hidden=true;return}$("own").hidden=false;
+  try{const D=await api("adminData");
+    const t=D.topups.map(p=>`<div class="card" style="margin:8px 0 0"><b>₹${esc(p.amt)}</b> top-up · UTR ${esc(p.id)}<div class="mu">${esc(p.uid)}. Match the UTR and amount in your bank app first.</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button class="p" data-oa="top" data-ok="1" data-id="${esc(p.id)}">Approve</button><button data-oa="top" data-ok="0" data-id="${esc(p.id)}">Reject</button></div></div>`).join("");
+    const r=D.pending.map(p=>`<div class="card" style="margin:8px 0 0"><b>₹${esc(p.amt)}</b> refund · ${esc(p.n)}<div class="mu">${esc(p.uid)}</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button class="p" data-oa="ref" data-ok="1" data-id="${esc(p.id)}">Approve</button><button data-oa="ref" data-ok="0" data-id="${esc(p.id)}">Reject</button></div></div>`).join("");
+    $("ownl").innerHTML=(t||r)?t+r:'<div class="mu">Nothing waiting for approval.</div>'}
+  catch(x){$("ownl").textContent=x.message}}
+$("ownl").onclick=async ev=>{const b=ev.target.closest("[data-oa]");if(!b)return;b.disabled=true;
+  try{await api(b.dataset.oa==="top"?"adminTopup":"adminRefund",{id:b.dataset.id,ok:b.dataset.ok==="1"});toast(b.dataset.ok==="1"?"Approved":"Rejected");await drawOwn()}
+  catch(x){toast(x.message);b.disabled=false}};
+const _render2=render;render=function(){_render2();if(!$("v-me").hidden)drawOwn()};
+const _go=go;go=function(v){_go(v);if(v==="me")drawOwn()};
 
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 setInterval(refresh,30000);

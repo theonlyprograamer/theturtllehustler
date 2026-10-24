@@ -39,4 +39,5 @@ document.addEventListener("click",async ev=>{const b=ev.target;if(!b.closest("#a
  if(b.dataset.cr){const a=prompt("Credit amount (₹)");if(a){await api("adminAdjust",{uid:b.dataset.cr,amount:a,note:prompt("Note","Admin credit")||"Admin credit"});await load();alert("Done")}}
  if(b.dataset.sv){const row=b.closest("[data-s]"),s={id:+row.dataset.s};row.querySelectorAll("[data-f]").forEach(i=>s[i.dataset.f]=i.value);await api("adminStation",{s});await load()}
 }catch(x){alert(x.message)}});
+try{const s=JSON.parse(localStorage.getItem("chargeone")||"{}");if(s.token&&s.owner){T=s.token;load().then(()=>{$("lg").hidden=true;$("ad").hidden=false}).catch(()=>{T=""})}}catch(e){}
 </script></body></html>
