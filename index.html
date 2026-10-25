@@ -9,6 +9,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>ChargeOne – Universal EV Charging</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script>window.jsQR||document.write('<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"><\/script>')</script>
 <style>
 :root{--bg:#f6f7f4;--card:#fff;--tx:#14201a;--mu:#66726b;--ac:#0f9d58;--acx:#fff;--bd:#e2e6e1;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101512;--card:#1a211d;--tx:#eaf0ec;--mu:#97a39b;--ac:#2ecc71;--acx:#08140d;--bd:#2a332d;--bad:#ff7a6b}}
@@ -169,26 +170,49 @@ $("tgo").onclick=()=>{const a=+$("tamt").value,v=$("vpa").value.trim(),m=$("tmsg
   setTimeout(()=>{st.bal+=a;st.h.unshift({ty:"topup",t:a});save();render();m.className="msg ok";m.textContent=inr(a)+" added to your wallet."},1500)};
 
 /* QR scanning */
-async function startCam(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-  const v=$("vid");v.srcObject=stream;await v.play();$("cmsg").textContent="Point at the charger’s QR code";loop()}
-  catch(e){$("cmsg").textContent="Live camera is blocked in this view. Tap “Take a photo of the QR” instead, or enter a code below."}}
-function loop(){const v=$("vid"),c=$("cv"),x=c.getContext("2d",{willReadFrequently:true});
-  raf=requestAnimationFrame(function f(){
-    if(v.readyState>=2&&window.jsQR){c.width=v.videoWidth;c.height=v.videoHeight;x.drawImage(v,0,0);
-      const r=jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height);if(r&&hit(r.data))return}
+let bd=null;try{if("BarcodeDetector" in window)bd=new BarcodeDetector({formats:["qr_code"]})}catch(e){}
+async function startCam(){const m=$("cmsg");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){m.textContent=window.isSecureContext?"This browser can’t open the camera here. Tap “Take a photo of the QR” or enter the code below.":"The camera only works on a secure (https) page. Open ChargeOne from its https link.";return}
+  stopCam();m.textContent="Starting camera…";
+  try{try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false})}
+      catch(e){if(e&&(e.name==="NotAllowedError"||e.name==="SecurityError"))throw e;stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false})}
+    const v=$("vid");v.setAttribute("playsinline","");v.muted=true;v.srcObject=stream;await v.play();
+    m.textContent=(bd||window.jsQR)?"Point at the charger’s QR code":"The QR reader didn’t load. Check your internet and reload, or enter the code below.";loop()}
+  catch(e){stopCam();const n=e&&e.name;
+    m.textContent=n==="NotAllowedError"||n==="SecurityError"?"Camera permission is blocked. Allow the camera for this site in your browser settings (iPhone: Settings > Safari > Camera), then tap Start camera again.":n==="NotFoundError"?"No camera found on this device. Tap “Take a photo of the QR” or enter the code below.":"Couldn’t start the camera ("+(n||"error")+"). Tap “Take a photo of the QR” or enter the code below."}}
+function loop(){const v=$("vid"),c=$("cv"),x=c.getContext("2d",{willReadFrequently:true});let busy=0,last="";
+  raf=requestAnimationFrame(async function f(){
+    if(!stream)return;
+    if(v.readyState>=2&&v.videoWidth&&!busy){busy=1;
+      try{let t="";
+        if(bd){const r=await bd.detect(v);t=r&&r[0]?r[0].rawValue:""}
+        else if(window.jsQR){c.width=v.videoWidth;c.height=v.videoHeight;x.drawImage(v,0,0);
+          const r=jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:"attemptBoth"});t=r?r.data:""}
+        if(t){if(hit(t,1))return;if(t!==last){last=t;toast("That QR isn’t a ChargeOne charger.")}}}catch(e){}
+      busy=0}
     raf=requestAnimationFrame(f)})}
 function stopCam(){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
-function hit(txt){const m=/CO-(\d{4})/i.exec(txt),s=m&&S.find(s=>code(s)==m[0].toUpperCase());
-  if(!s){if(!stream)toast("Code not recognised. Try CO-1001.");return false}
+function hit(txt,q){txt=String(txt||"");const m=/CO-(\d{4})/i.exec(txt);let s=m&&S.find(x=>code(x)==m[0].toUpperCase());
+  if(!s){const o=/station=(\d+)/i.exec(txt);if(o)s=S.find(x=>x.id==+o[1])} // older printed QR codes
+  if(!s){if(!stream&&!q)toast("Code not recognised. Try CO-1001.");return false}
   stopCam();pre(s);return true}
+// read a QR from a photo: try several sizes (photos of screens and tiny screenshots often decode at one size but not another)
+async function readImage(im){const c=$("cv"),x=c.getContext("2d",{willReadFrequently:true}),m=Math.max(im.width,im.height),seen={};
+  for(const t of [1000,640,420,1500,260]){const k=Math.min(t/m,3),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k));if(seen[w])continue;seen[w]=1;
+    c.width=w;c.height=h;x.fillStyle="#fff";x.fillRect(0,0,w,h);x.imageSmoothingEnabled=k<1;x.drawImage(im,0,0,w,h);
+    try{if(bd){const r=await bd.detect(c);if(r&&r[0]&&r[0].rawValue)return r[0].rawValue}}catch(e){}
+    if(window.jsQR){const r=jsQR(x.getImageData(0,0,w,h).data,w,h,{inversionAttempts:"attemptBoth"});if(r&&r.data)return r.data}}
+  return ""}
 $("cam").onclick=startCam;
 $("qb").onclick=()=>$("qf").click();
-$("qf").onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();
-  fr.onload=()=>{const im=new Image();im.onload=()=>{const c=$("cv"),x=c.getContext("2d",{willReadFrequently:true}),sc=Math.min(1,1200/Math.max(im.width,im.height));
-    c.width=im.width*sc;c.height=im.height*sc;x.drawImage(im,0,0,c.width,c.height);
-    const r=window.jsQR&&jsQR(x.getImageData(0,0,c.width,c.height).data,c.width,c.height);
-    if(!r||!hit(r.data))toast("Couldn’t read a ChargeOne QR in that photo. Try again, closer and steadier.")};im.src=fr.result};
-  fr.readAsDataURL(f);e.target.value=""};$("mgo").onclick=()=>hit($("mc").value.trim());
+$("qf").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const fr=new FileReader();
+  fr.onerror=()=>toast("Couldn’t open that photo.");
+  fr.onload=()=>{const im=new Image();im.onerror=()=>toast("Couldn’t open that photo. Try a JPG or PNG.");
+    im.onload=async()=>{toast("Reading QR…");const t=await readImage(im);
+      if(!t){toast(bd||window.jsQR?"No QR found in that photo. Try again, closer and steadier, with the whole QR in view.":"The QR reader didn’t load. Check your internet and reload the app.");return}
+      if(!hit(t,1))toast("QR read, but it isn’t a ChargeOne charger: "+t.slice(0,40))};
+    im.src=fr.result};fr.readAsDataURL(f)};
+$("mgo").onclick=()=>hit($("mc").value.trim());
 
 /* start charging */
 function pre(s){if(!s.a){toast(s.n+" is busy right now.");return}
