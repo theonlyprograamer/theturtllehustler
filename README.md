@@ -34,3 +34,9 @@ Open `/admin.html` and log in with `ADMIN_USER` / `ADMIN_PASS`: approve or rejec
 - Charger energy is reported by the app in this version. Real use needs the charger network’s API (OCPP/OCPI) to confirm kWh delivered.
 - Holding customer money in a wallet needs an RBI PPI licence or a licensed partner.
 - Sessions left open (tab closed mid-charge) stay as holds in the Ledger until settled.
+
+## Live activity (version 9)
+- **Drivers:** a live charging screen with kWh, cost and (if the vehicle has a battery size) battery %. **Minimise** keeps a mini bar above the tabs while they browse. The screen reopens by itself if the page is reloaded or the phone sleeps. A notification shows progress and "Charging complete" (the app asks permission when charging starts).
+- **Owner:** admin panel opens on a **🔴 Live** tab: every charger, free or in use, who is using it (email, phone, vehicle), their wallet balance, kWh and cost so far, battery %, and time since the last update. Refreshes every 5 s. **Stop & settle** ends a stuck session and returns the unused money to the user's wallet.
+- **Update steps:** replace `Code.gs` in Apps Script and deploy a **new version**; upload `api.js`, `admin.html` and the new `sw.js` to GitHub. `index.html` and `config.js` are unchanged.
+- **Limits:** progress is still simulated by the app (30x real time for the demo). Notifications update while the app is open or recently in the background; true lock-screen live updates need a native app or a push server. On iPhone, notifications only work after "Add to Home Screen".

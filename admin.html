@@ -10,19 +10,24 @@ input,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid va
 button{cursor:pointer;background:var(--card)}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 .r{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.mu{color:var(--mu);font-size:13px}.no{color:var(--bad)}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left}.sc{overflow-x:auto}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);margin-left:4px}.bar{height:8px;border-radius:9px;background:var(--bd);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--ac)}.live{margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)}
 </style></head><body>
 <h2>⚡ ChargeOne Admin</h2>
 <div id="lg" class="card"><div class="r"><input id="u" placeholder="Username" autocapitalize="none"><input id="pw" type="password" placeholder="Password"><button class="p" id="li">Log in</button></div><div class="mu no" id="le"></div></div>
 <div id="ad" hidden>
-  <div class="r"><button data-t="top">Top-ups</button><button data-t="cod">Gift codes</button><button data-t="ref">Refunds</button><button data-t="usr">Users</button><button data-t="stn">Stations</button><button data-t="led">Ledger</button><button id="lo">Log out</button></div>
+  <div class="r"><button data-t="liv">🔴 Live</button><button data-t="top">Top-ups</button><button data-t="cod">Gift codes</button><button data-t="ref">Refunds</button><button data-t="usr">Users</button><button data-t="stn">Stations</button><button data-t="led">Ledger</button><button id="lo">Log out</button></div>
   <div id="out"></div>
 </div>
 <script src="config.js"></script>
 <script>
-let T="",D=null,tab="top";const $=i=>document.getElementById(i),e=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let T="",D=null,tab="liv";const $=i=>document.getElementById(i),e=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function api(a,d={}){const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({a,t:T,...d})});const j=await r.json();if(j.err)throw new Error(j.err);return j}
 async function load(){D=await api("adminData");show()}
+const sl={charging:"Charging",nosignal:"No signal",stuck:"Stuck"};
+function sess(z){const m=Math.max(0,Math.round((Date.now()-z.t0)/60000));return `<div class="live"><b>${e(z.uid)}</b><span class="tag">${sl[z.st]}</span><div class="mu">📞 ${e(z.phone)} · 🚗 ${e(z.veh)} · wallet ₹${e(z.bal)}</div><div>⚡ ${z.kwh.toFixed(2)} / ${e(z.k)} kWh · ₹${e(z.cost)} of ₹${e(z.pre)} held${z.pct!=null?" · 🔋 "+Math.round(z.pct)+"%":""}</div><div class="bar"><i style="width:${Math.min(100,z.kwh/z.k*100)}%"></i></div><div class="mu">started ${m} min ago · last update ${z.ago}s ago</div>${z.st!="charging"?`<button data-fs="${e(z.sid)}">Stop &amp; settle</button>`:""}</div>`}
 function show(){const o=$("out");
+ if(tab=="liv"){const L=D.live,n=L.st.reduce((s,x)=>s+x.use.length,0)+L.other.length;
+  o.innerHTML=`<div class="card">🔴 <b>${n} charging now</b> · ${L.st.filter(x=>!x.use.length).length} chargers free <span class="mu">· refreshes every 5 s</span></div>`+L.st.map(s=>`<div class="card"><div class="r" style="justify-content:space-between;margin:0"><b>${e(s.n)}</b><span class="mu">${e(s.net)} · ${e(s.cn)} · ${e(s.kw)} kW</span></div>${s.use.length?s.use.map(sess).join(""):'<div class="mu">Free</div>'}</div>`).join("")+(L.other.length?`<div class="card"><b>Other open sessions</b> <span class="mu">(charger was renamed or deleted)</span>${L.other.map(sess).join("")}</div>`:"")}
  if(tab=="top")o.innerHTML=D.topups.length?D.topups.map(p=>`<div class="card"><b>₹${e(p.amt)}</b> · UTR ${e(p.id)}<div class="mu">${e(p.uid)} · check your bank/UPI app for this UTR and amount before approving</div><div class="r"><button class="p" data-tid="${e(p.id)}" data-ok="1">Approve</button><button data-tid="${e(p.id)}" data-ok="0">Reject</button></div></div>`).join(""):'<div class="card mu">No pending top-ups.</div>';
  if(tab=="cod")o.innerHTML='<div class="card r"><input data-c="code" placeholder="NEW_CODE_123"><input data-c="amt" type="number" placeholder="₹ amount" size="6"><input data-c="for" placeholder="only for (email, optional)"><label class="mu"><input type="checkbox" data-c="unl"> unlimited</label><button class="p" data-cn="1">Create code</button></div><div class="card sc"><table><tr><th>Code</th><th>₹</th><th>Status</th><th>Used by</th><th>Only for</th></tr>'+D.codes.map(x=>`<tr><td>${e(x.code)}</td><td>${e(x.amount)}</td><td>${e(x.status)}</td><td>${e(x.by)}</td><td>${e(x.f)}</td></tr>`).join("")+"</table></div>";
  if(tab=="ref")o.innerHTML=D.pending.length?D.pending.map(p=>`<div class="card"><b>₹${e(p.amt)}</b> · ${e(p.n)}<div class="mu">${e(p.uid)}</div><div class="r"><button class="p" data-ok="1" data-id="${e(p.id)}">Approve</button><button data-ok="0" data-id="${e(p.id)}">Reject</button></div></div>`).join(""):'<div class="card mu">No pending refunds.</div>';
@@ -37,8 +42,11 @@ document.addEventListener("click",async ev=>{const b=ev.target;if(!b.closest("#a
  if(b.dataset.tid){await api("adminTopup",{id:b.dataset.tid,ok:b.dataset.ok==="1"});await load()}
  if(b.dataset.id){await api("adminRefund",{id:b.dataset.id,ok:b.dataset.ok==="1"});await load()}
  if(b.dataset.cr){const a=prompt("Credit amount (₹)");if(a){await api("adminAdjust",{uid:b.dataset.cr,amount:a,note:prompt("Note","Admin credit")||"Admin credit"});await load();alert("Done")}}
+
+ if(b.dataset.fs&&confirm("Stop this session and settle at the last reported kWh? Unused money goes back to the user's wallet.")){await api("adminSettle",{sid:b.dataset.fs});await load()}
  if(b.dataset.sd&&confirm("Delete this charger?")){await api("adminStationDel",{id:b.dataset.sd});await load()}
  if(b.dataset.sv){const row=b.closest("[data-s]"),s={id:+row.dataset.s};row.querySelectorAll("[data-f]").forEach(i=>s[i.dataset.f]=i.value);await api("adminStation",{s});await load()}
 }catch(x){alert(x.message)}});
+setInterval(async()=>{if(T&&tab==="liv"&&!document.hidden){try{D.live=(await api("adminLive")).live;show()}catch(x){}}},5000);
 try{const s=JSON.parse(localStorage.getItem("chargeone")||"{}");if(s.token&&s.owner){T=s.token;load().then(()=>{$("lg").hidden=true;$("ad").hidden=false}).catch(()=>{T=""})}}catch(e){}
 </script></body></html>

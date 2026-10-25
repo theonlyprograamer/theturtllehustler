@@ -81,7 +81,7 @@ function check(t) {
 }
 
 /* ---------- web app entry ---------- */
-function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 8 (owner console)"); }
+function doGet() { return ContentService.createTextOutput("ChargeOne API is running - version 9 (live activity)"); }
 function doPost(e) {
   let out;
   const L = LockService.getScriptLock();
@@ -98,12 +98,16 @@ function route(d) {
   if (a === "adminLogin") return adminLogin(d);
   if (a.indexOf("admin") === 0) { const t = check(d.t); if (!(t.a || (t.p && isOwner(t.p)))) throw "auth"; return admin(a, d); }
   const id = check(d.t).p; if (!id) throw "auth";
+  if (a === "progress") { // live heartbeat from the charging screen: kept in cache (fast, no sheet write)
+    const k = +d.kwh; if (!(k >= 0 && k <= 100) || !/^S[A-Za-z0-9]{6,20}$/.test(String(d.sid))) throw "Bad progress";
+    CacheService.getScriptCache().put("p" + d.sid, JSON.stringify({ u: id, k: k, t: Date.now() }), 21600); return { ok: 1 };
+  }
   const u = all("Users").find(x => String(x.id) === id); if (!u) throw "auth";
   if (a === "state") return state(id);
   if (a === "saveVehicle") {
     const v = d.veh || {}, vv = vget(u), plate = String(v.plate || "").toUpperCase().replace(/\s/g, "");
     if (!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(plate) || CONS.indexOf(v.cn) < 0 || !String(v.make || "").trim() || !String(v.model || "").trim()) throw "Invalid vehicle details";
-    const type = VTYPES.indexOf(v.type) < 0 ? "Car" : v.type, rec = { type: type, make: String(v.make).trim().slice(0, 30), model: String(v.model).trim().slice(0, 30), plate: plate, cn: v.cn };
+    const type = VTYPES.indexOf(v.type) < 0 ? "Car" : v.type, rec = { type: type, make: String(v.make).trim().slice(0, 30), model: String(v.model).trim().slice(0, 30), plate: plate, cn: v.cn, bat: (+v.bat > 0 && +v.bat <= 300) ? +v.bat : "" };
     const cur = v.id ? vv.list.find(x => x.id === v.id) : null;
     if (vv.list.find(x => x.plate === plate && x !== cur)) throw "That number plate is already added";
     if (cur) Object.assign(cur, rec);
@@ -159,19 +163,11 @@ function route(d) {
     const s = all("Stations").find(x => +x.id === +d.station); if (!s || !+s.a) throw "Charger unavailable";
     const v = vact(vget(u), d.vid) || {}; if (v.cn !== s.cn) throw "Connector mismatch";
     const pre = r2(k * s.p * (1 + FEE)); if (bal(id) < pre) throw "Not enough wallet balance";
-    const sid = "S" + lid();
-    put("Ledger", { id: sid, ts: new Date(), uid: id, type: "hold", amount: -pre, note: s.n, ref: sid, status: "open", r: 0, meta: JSON.stringify({ n: s.n, net: s.net, k: k, p: +s.p, kwh: 0 }) });
-    return { sid: sid, pre: pre, bal: bal(id) };
+    const sid = "S" + lid(), now = new Date();
+    put("Ledger", { id: sid, ts: now, uid: id, type: "hold", amount: -pre, note: s.n, ref: sid, status: "open", r: 0, meta: JSON.stringify({ n: s.n, net: s.net, k: k, p: +s.p, kwh: 0, sp: Math.max(0, Math.min(100, +d.sp || 0)), bat: +v.bat || 0, vn: (String(v.make || "") + " " + String(v.model || "")).trim(), vp: v.plate || "" }) });
+    return { sid: sid, pre: pre, bal: bal(id), t0: now.getTime() };
   }
-  if (a === "settle") {
-    const h = holdOf(id, d.sid), m = JSON.parse(h.meta), pre = -h.amount;
-    if (h.status === "settled") return { kwh: m.kwh, cost: m.cost, unused: r2(pre - m.cost), state: state(id) };
-    const kwh = Math.max(0, Math.min(+d.kwh || 0, m.k)), cost = r2(kwh * m.p * (1 + FEE)), un = r2(pre - cost);
-    m.kwh = kwh; m.cost = cost;
-    setCell("Ledger", h._r, "meta", JSON.stringify(m)); setCell("Ledger", h._r, "status", "settled");
-    if (un > 0) put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "release", amount: un, note: m.n, ref: h.id, status: "ok" });
-    return { kwh: kwh, cost: cost, unused: un, state: state(id) };
-  }
+  if (a === "settle") { const r = settleHold(holdOf(id, d.sid), id, +d.kwh); r.state = state(id); return r; }
   if (a === "refundRequest") {
     const h = holdOf(id, d.id), m = JSON.parse(h.meta);
     if (h.status !== "settled" || +h.r || !(m.cost > 0)) throw "A refund can’t be requested for this payment";
@@ -191,11 +187,41 @@ function vget(u) {
 function vact(vv, id) { return vv.list.find(x => x.id === (id || vv.act)) || vv.list.find(x => x.id === vv.act) || null; }
 function vsave(u, vv) { setCell("Users", u._r, "veh", vv.list.length ? JSON.stringify(vv) : ""); }
 
+function settleHold(h, id, k0) {
+  const m = JSON.parse(h.meta), pre = -h.amount;
+  if (h.status === "settled") return { kwh: m.kwh, cost: m.cost, unused: r2(pre - m.cost) };
+  const kwh = Math.max(0, Math.min(k0 || 0, m.k)), cost = r2(kwh * m.p * (1 + FEE)), un = r2(pre - cost);
+  m.kwh = kwh; m.cost = cost;
+  setCell("Ledger", h._r, "meta", JSON.stringify(m)); setCell("Ledger", h._r, "status", "settled");
+  if (un > 0) put("Ledger", { id: lid(), ts: new Date(), uid: id, type: "release", amount: un, note: m.n, ref: h.id, status: "ok" });
+  CacheService.getScriptCache().remove("p" + h.id);
+  return { kwh: kwh, cost: cost, unused: un };
+}
+
+/* Live view for the owner: every open session joined with its charger, user, wallet balance and last heartbeat. */
+function liveData() {
+  const C = CacheService.getScriptCache(), now = Date.now(), U = all("Users"), S = all("Stations"), L = all("Ledger");
+  const bl = {}; L.forEach(x => { const k = String(x.uid); bl[k] = (bl[k] || 0) + (+x.amount || 0); });
+  const sess = L.filter(x => x.type === "hold" && x.status === "open").map(x => {
+    const m = JSON.parse(x.meta), uk = String(x.uid), u = U.find(y => String(y.id) === uk) || {}, av = vact(vget(u)) || {};
+    const pg = C.get("p" + x.id), p = pg ? JSON.parse(pg) : null, mine = p && p.u === uk;
+    const t0 = new Date(x.ts).getTime() || now, last = mine ? p.t : t0, kwh = mine ? Math.min(p.k, m.k) : 0, ago = Math.max(0, Math.round((now - last) / 1000));
+    return { sid: x.id, sn: m.n, uid: uk, phone: String(u.phone || ""), bal: r2(bl[uk] || 0),
+      veh: m.vp ? (m.vn + " · " + m.vp) : (av.make ? (av.make + " " + av.model + " · " + av.plate) : ""),
+      kwh: kwh, k: m.k, pre: r2(-x.amount), cost: r2(kwh * m.p * (1 + FEE)), pct: m.bat > 0 ? Math.min(100, (+m.sp || 0) + kwh / m.bat * 100) : null,
+      t0: t0, ago: ago, st: ago <= 45 ? "charging" : (ago <= 1800 ? "nosignal" : "stuck") };
+  });
+  return { now: now, st: S.map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a, use: sess.filter(z => z.sn === s.n) })),
+           other: sess.filter(z => !S.find(s => s.n === z.sn)) };
+}
+
 function holdOf(id, ref) { const h = all("Ledger").find(x => x.id === ref && String(x.uid) === id && x.type === "hold"); if (!h) throw "Session not found"; return h; }
 function bal(id) { return r2(all("Ledger").filter(x => String(x.uid) === id).reduce((s, x) => s + (+x.amount), 0)); }
 function state(id) {
   const u = all("Users").find(x => String(x.id) === id);
-  const h = all("Ledger").filter(x => String(x.uid) === id).reverse().map(x => {
+  const LL = all("Ledger").filter(x => String(x.uid) === id);
+  const oh = LL.filter(x => x.type === "hold" && x.status === "open").pop();
+  const h = LL.slice().reverse().map(x => {
     const m = x.meta ? JSON.parse(x.meta) : {};
     if (x.type === "topup") return { ty: "topup", t: +x.amount };
     if (x.type === "hold") return { ty: "pay", id: x.id, n: m.n, net: m.net, kwh: +(+m.kwh || 0).toFixed(2), t: m.cost != null ? m.cost : -x.amount, m: "w", r: +x.r || 0 };
@@ -205,7 +231,10 @@ function state(id) {
   });
   const stations = all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a }));
   const vv = vget(u);
-  return { bal: bal(id), veh: vact(vv), vl: vv.list, act: vv.act, owner: isOwner(id), ob: P.getProperty("DEV_MODE") === "1" && String(id).toLowerCase() === OWNER(), h: h, stations: stations };
+  let ses = null; // an unfinished charging session, so the app can resume the live screen
+  if (oh) { const m = JSON.parse(oh.meta), sn = all("Stations").find(s => s.n === m.n);
+    ses = { sid: oh.id, n: m.n, net: m.net, id: sn ? +sn.id : 0, kw: sn ? +sn.kw : 30, k: m.k, p: m.p, pre: -oh.amount, sp: m.sp || 0, bat: m.bat || 0, t0: new Date(oh.ts).getTime() || Date.now() }; }
+  return { ses: ses, bal: bal(id), veh: vact(vv), vl: vv.list, act: vv.act, owner: isOwner(id), ob: P.getProperty("DEV_MODE") === "1" && String(id).toLowerCase() === OWNER(), h: h, stations: stations };
 }
 
 /* ---------- OTP ---------- */
@@ -271,7 +300,13 @@ function admin(a, d) {
     const pending = L.filter(x => x.type === "hold" && +x.r === 1).map(x => ({ id: x.id, uid: x.uid, n: JSON.parse(x.meta).n, amt: JSON.parse(x.meta).cost }));
     const ledger = L.slice(-100).reverse().map(x => ({ ts: x.ts, uid: x.uid, type: x.type, amount: x.amount, note: x.note, status: x.status }));
     const topups = all("Orders").filter(x => x.status === "pending").map(x => ({ id: String(x.order_id), uid: x.uid, amt: +x.amount, ts: x.ts }));
-    return { users: users, pending: pending, topups: topups, codes: all("Codes").map(x => ({ code: x.code, amount: +x.amount, status: x.status, by: x.used_by, f: x["for"] })), ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a })) };
+    return { live: liveData(), users: users, pending: pending, topups: topups, codes: all("Codes").map(x => ({ code: x.code, amount: +x.amount, status: x.status, by: x.used_by, f: x["for"] })), ledger: ledger, stations: all("Stations").map(s => ({ id: +s.id, n: s.n, net: s.net, cn: s.cn, kw: +s.kw, p: +s.p, a: +s.a })) };
+  }
+  if (a === "adminLive") return { live: liveData() };
+  if (a === "adminSettle") { // force-finish a stuck session at its last reported kWh; unused money returns to the user's wallet
+    const h = all("Ledger").find(x => x.id === d.sid && x.type === "hold"); if (!h) throw "Session not found";
+    const pg = CacheService.getScriptCache().get("p" + h.id), p = pg ? JSON.parse(pg) : null;
+    settleHold(h, String(h.uid), p && p.u === String(h.uid) ? p.k : 0); return { ok: 1 };
   }
   if (a === "adminRefund") {
     const h = all("Ledger").find(x => x.id === d.id && +x.r === 1); if (!h) throw "Not pending";

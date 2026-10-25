@@ -32,7 +32,7 @@ $("b3").onclick=async()=>{const m=$("m3"),pl=$("vpl").value.trim().toUpperCase()
   m.className="msg no";
   if(!mk||!md){m.textContent="Enter your vehicle make and model.";return}
   if(!/^[A-Z]{2}-?\d{1,2}-?[A-Z]{1,3}-?\d{1,4}$/.test(pl)){m.textContent="Enter a valid plate, like KL07AB1234.";return}
-  try{apply(await api("saveVehicle",{veh:{id:editId,type:$("vty").value,make:mk,model:md,plate:pl,cn:$("vcn").value}}));editId=null;boot()}catch(e){m.textContent=e.message}};
+  try{apply(await api("saveVehicle",{veh:{id:editId,type:$("vty").value,make:mk,model:md,plate:pl,cn:$("vcn").value,bat:$("vbt").value}}));editId=null;boot()}catch(e){m.textContent=e.message}};
 
 // UPI top-up: pay to the owner's UPI ID, then submit the 12-digit UTR; admin approves
 $("tgo").textContent="Pay with UPI app";
@@ -60,7 +60,7 @@ $("go").onclick=async()=>{const{k}=calc();$("go").disabled=true;$("msg").classNa
   catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
 async function stop(){if(ss.done)return;clearInterval(ss.iv);ss.done=1;$("stopb").disabled=true;
   try{const r=await api("settle",{sid:ss.sid,kwh:+ss.d.toFixed(3)});apply(r.state);render();
-    $("lt").textContent="Charging complete";$("stopb").textContent="Done";
+    $("lt").textContent="Charging complete";$("stopb").textContent="Done";$("lmin").hidden=true;setMini();note("Charging complete","Charged "+r.kwh.toFixed(2)+" kWh for "+inr(r.cost),1);
     $("lmsg").textContent=`Charged ${r.kwh.toFixed(2)} kWh for ${inr(r.cost)}`+(r.unused>.005?`. ${inr(r.unused)} returned to your wallet.`:".")}
   catch(e){$("lmsg").className="msg no";$("lmsg").textContent=e.message}
   $("stopb").disabled=false}
@@ -79,12 +79,12 @@ $("mveh").previousElementSibling.hidden=true;$("mveh").hidden=true;$("mcn").hidd
 $("ev").insertAdjacentHTML("beforebegin",'<div class="mu" style="margin-top:10px">My vehicles</div><div id="vl"></div>');
 $("ev").textContent="+ Add another vehicle";
 function openVeh(v){editId=v?v.id:null;$("app").hidden=true;$("onb").hidden=false;step(3);
-  $("vty").value=v?(v.type||"Car"):"Car";$("vmk").value=v?v.make:"";$("vmd").value=v?v.model:"";$("vpl").value=v?v.plate:"";$("vcn").value=v?v.cn:"CCS2";
+  $("vty").value=v?(v.type||"Car"):"Car";$("vmk").value=v?v.make:"";$("vmd").value=v?v.model:"";$("vpl").value=v?v.plate:"";$("vcn").value=v?v.cn:"CCS2";$("vbt").value=v&&v.bat?v.bat:"";
   $("m3").textContent="";$("vcc").hidden=!st.veh}
 $("ev").onclick=()=>openVeh(null);
 $("vcc").onclick=()=>{editId=null;boot()};
 function drawVeh(){$("vl").innerHTML=(st.vl||[]).map(v=>{const on=st.veh&&st.veh.id===v.id;
-  return `<div class="card" style="margin:8px 0 0"><div class="row"><b>${ICON[v.type]||"🚗"} ${esc(v.make)} ${esc(v.model)}</b>${on?'<span class="tag ok">In use</span>':`<button data-vi="use" data-id="${esc(v.id)}">Use</button>`}</div><div class="mu">${esc(v.type||"Car")} · ${esc(v.plate)} · ${esc(v.cn)}</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button data-vi="edit" data-id="${esc(v.id)}">Edit</button><button data-vi="del" data-id="${esc(v.id)}">Remove</button></div></div>`}).join("")}
+  return `<div class="card" style="margin:8px 0 0"><div class="row"><b>${ICON[v.type]||"🚗"} ${esc(v.make)} ${esc(v.model)}</b>${on?'<span class="tag ok">In use</span>':`<button data-vi="use" data-id="${esc(v.id)}">Use</button>`}</div><div class="mu">${esc(v.type||"Car")} · ${esc(v.plate)} · ${esc(v.cn)}${v.bat?" · "+esc(v.bat)+" kWh":""}</div><div class="row" style="margin-top:6px;justify-content:flex-start"><button data-vi="edit" data-id="${esc(v.id)}">Edit</button><button data-vi="del" data-id="${esc(v.id)}">Remove</button></div></div>`}).join("")}
 const _render=render;render=function(){_render();drawVeh()};
 $("vl").onclick=async ev=>{const b=ev.target.closest("[data-vi]");if(!b)return;const id=b.dataset.id,k=b.dataset.vi;
   try{if(k==="use"){apply(await api("setActive",{id}));render()}
@@ -114,6 +114,42 @@ $("ocon").onclick=()=>{$("ocf").src="admin.html?"+Date.now();$("oc").hidden=fals
 $("occ").onclick=()=>{$("oc").hidden=true;$("ocf").src="about:blank";refresh();drawOwn()};
 const _render2=render;render=function(){_render2();if(!$("v-me").hidden)drawOwn()};
 const _go=go;go=function(v){_go(v);if(v==="me")drawOwn()};
+
+
+// ===== Live activity: progress by clock time, battery %, mini bar, notifications, resume =====
+$("vcn").insertAdjacentHTML("afterend",'<input type="number" id="vbt" min="1" max="300" step="0.1" placeholder="Battery size in kWh (optional, shows battery %)">');
+$("pvs").insertAdjacentHTML("afterend",'<div id="spw" hidden style="margin-top:10px"><div>Battery level now: <b id="spv">20</b>%</div><input type="range" id="sp" min="0" max="95" value="20"></div>');
+$("sp").oninput=()=>$("spv").textContent=$("sp").value;
+const _pre2=pre;pre=function(s){_pre2(s);$("spw").hidden=!(st.veh&&+st.veh.bat>0)};
+$("ld").insertAdjacentHTML("afterend",'<div id="lbat" style="margin-top:6px;font-weight:600"></div>');
+$("stopb").insertAdjacentHTML("beforebegin",'<button class="w" id="lmin">Minimise</button>');
+document.body.insertAdjacentHTML("beforeend",'<div id="mini" hidden style="position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));max-width:456px;margin:0 auto;background:var(--ac);color:var(--acx);border-radius:14px;padding:10px 14px;z-index:25;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)"><div class="row"><b id="mt">⚡ Charging</b><span id="mp"></span></div><div class="bar" style="margin:6px 0 0;background:rgba(255,255,255,.35)"><i id="mb" style="background:#fff"></i></div></div>');
+let swr=null;if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").then(r=>swr=r).catch(()=>{});
+function askNotify(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
+function note(t,b,done){try{if(swr&&"Notification" in window&&Notification.permission==="granted")swr.showNotification(t,{body:b,tag:"chargeone-live",renotify:!!done,silent:!done})}catch(e){}}
+function setMini(){$("mini").hidden=!(ss&&!ss.done&&$("live").style.display!=="flex")}
+function paint(){const c=ss.d*ss.s.p*(1+FEE),pc=ss.bat>0?Math.min(100,ss.sp+ss.d/ss.bat*100):null,tx=ss.d.toFixed(1)+" kWh · "+inr(c)+(pc==null?"":" · 🔋"+Math.round(pc)+"%");
+  $("ld").textContent=ss.d.toFixed(2)+" kWh";$("lb").style.width=(ss.d/ss.k*100)+"%";$("lc").textContent=inr(c);
+  $("lbat").textContent=pc==null?"":"🔋 Battery "+Math.round(ss.sp)+"% → "+Math.round(pc)+"%";
+  $("mt").textContent="⚡ "+ss.s.n;$("mp").textContent=tx;$("mb").style.width=(ss.d/ss.k*100)+"%";
+  if(document.hidden&&Date.now()-(ss.ln||0)>15000){ss.ln=Date.now();note("Charging at "+ss.s.n,tx)}}
+function tick(){ss.d=Math.min(ss.k,ss.s.kw/3600*30*(Date.now()-ss.t0)/1000); // demo runs 30x real time; clock-based so it catches up after the phone sleeps
+  paint();if(Date.now()-(ss.lp||0)>5000){ss.lp=Date.now();api("progress",{sid:ss.sid,kwh:+ss.d.toFixed(3)}).catch(()=>{})}
+  if(ss.d>=ss.k)stop()}
+const _live=live;live=function(){_live();$("lmin").hidden=false;setMini()};
+$("lmin").onclick=()=>{$("live").style.display="none";setMini()};
+$("mini").onclick=()=>{$("live").style.display="flex";setMini()};
+$("go").onclick=async()=>{const{k}=calc();askNotify();$("go").disabled=true;$("msg").className="msg";$("msg").textContent="Starting…";
+  try{const sp=st.veh&&+st.veh.bat>0?+$("sp").value:0,r=await api("pay",{station:cur.id,kwh:k,vid:st.veh&&st.veh.id,sp});st.bal=r.bal;save();
+    ss={s:cur,k,t:r.pre,m:"w",d:0,done:0,sid:r.sid,t0:r.t0||Date.now(),sp,bat:(st.veh&&+st.veh.bat)||0};
+    $("pre").style.display="none";live();ss.iv=setInterval(tick,1000);render()}
+  catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
+// reopen the live screen if a session is still running (page reloaded, another device, phone slept)
+const _apply=apply;apply=function(s){_apply(s);resume(s.ses)};
+function resume(q){if(!q||(ss&&ss.sid===q.sid))return;
+  ss={s:{id:q.id,n:q.n,net:q.net,kw:q.kw,p:q.p},k:q.k,t:q.pre,m:"w",d:0,done:0,sid:q.sid,t0:q.t0,sp:q.sp,bat:q.bat};
+  live();ss.iv=setInterval(tick,1000);tick()}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ss&&!ss.done)tick()});
 
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 setInterval(refresh,30000);
