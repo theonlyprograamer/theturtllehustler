@@ -160,13 +160,40 @@ $("go").onclick=async()=>{const{k}=calc();askNotify();$("go").disabled=true;$("m
     $("pre").style.display="none";live();x.iv=setInterval(()=>tick(x),1000);render()}
   catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
 // reopen the live screen if a session is still running (page reloaded, another device, phone slept)
-const _apply=apply;apply=function(s){_apply(s);(s.sesl||[s.ses]).forEach(q=>resume(q))};
+const _apply=apply;apply=function(s){_apply(s);(s.sesl||[s.ses]).forEach(q=>resume(q));deep()};
 function resume(q){if(!q||ALL[q.sid])return;
   const x={s:{id:q.id,n:q.n,net:q.net,kw:q.kw,p:q.p},k:q.k,t:q.pre,m:"w",d:0,done:0,sid:q.sid,t0:q.t0,sp:q.sp,bat:q.bat,vp:q.vp||""};ALL[x.sid]=x;
   if(!ss||ss.done){ss=x;live()}else{drawSw();setMini()}
   x.iv=setInterval(()=>tick(x),1000);tick(x)}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)running().forEach(x=>tick(x))});
 
+// ===== QR / NFC: a link like https://site/?c=CO-1001 (QR code or NFC tag) opens that charger =====
+let pendC="";try{const q=(new URLSearchParams(location.search).get("c")||"").toUpperCase();if(/^CO-\d{4}$/.test(q)){pendC=q;sessionStorage.setItem("co_c",q)}else pendC=sessionStorage.getItem("co_c")||""}catch(e){}
+function deep(){if(!pendC||!st.token||!st.veh||!S.length)return;const c=pendC;pendC="";
+  try{sessionStorage.removeItem("co_c");history.replaceState(null,"",location.pathname)}catch(e){}
+  setTimeout(()=>{go("home");hit(c)},300)}
+// read an NFC tag inside the app (Chrome on Android). iPhone opens the app by itself when a tag is tapped.
+let nfcAb=null;
+if("NDEFReader" in window){$("qb").insertAdjacentHTML("afterend",'<button class="w" id="nfcb">📲 Tap an NFC tag</button>');
+  $("nfcb").onclick=async()=>{const m=$("cmsg");
+    try{const r=new NDEFReader();if(nfcAb)nfcAb.abort();nfcAb=new AbortController();await r.scan({signal:nfcAb.signal});m.textContent="Hold your phone near the charger’s NFC tag…";
+      r.onreading=ev=>{for(const rec of ev.message.records){let t="";try{t=new TextDecoder(rec.encoding||"utf-8").decode(rec.data)}catch(e){}if(hit(t)){nfcAb.abort();nfcAb=null;return}}};
+      r.onreadingerror=()=>toast("Couldn’t read that tag. Try again.")}
+    catch(e){m.textContent="NFC isn’t available or was blocked. Turn NFC on and allow it."}}}
+else $("qb").insertAdjacentHTML("afterend",'<div class="mu" style="margin-top:8px">On iPhone, just tap the phone on the charger’s NFC tag. ChargeOne opens by itself.</div>');
+const _go3=go;go=function(v){_go3(v);if(v!=="scan"&&nfcAb){nfcAb.abort();nfcAb=null}};
+// ===== iPhone: "Add to Home Screen" popup (iOS has no install prompt, so we show the steps) =====
+(function(){const ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),
+  phone=/iPhone|iPod/i.test(ua),safari=!/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua),
+  stand=navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+  if(!ios||stand)return;
+  try{if(Date.now()<(+localStorage.getItem("co_a2hs")||0))return}catch(e){}
+  const sh='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  document.body.insertAdjacentHTML("beforeend",`<div id="a2h" hidden style="position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));max-width:456px;margin:0 auto;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;z-index:35;box-shadow:0 6px 24px rgba(0,0,0,.28)"><div class="row"><b>⚡ Add ChargeOne to your Home Screen</b><button id="a2hx" aria-label="Close" style="border:0;background:none;font-size:18px;color:var(--mu)">✕</button></div><div class="mu" style="margin:6px 0 8px">Opens like an app, and live charging alerts work.</div><div style="font-size:14px;line-height:1.55">${safari?"":"<b>First open this page in Safari.</b><br>"}1. Tap the Share button ${sh}<br>2. Scroll and tap <b>Add to Home Screen</b><br>3. Tap <b>Add</b>, then open ChargeOne from your Home Screen and sign in once.</div><button class="p w" id="a2hok" style="margin-top:10px">Got it</button><button class="w" id="a2hn" style="border:0;background:none;color:var(--mu);margin-top:2px">Not now</button>${phone&&safari?'<div style="position:absolute;left:50%;bottom:-8px;width:14px;height:14px;margin-left:-7px;background:var(--card);border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);transform:rotate(45deg)"></div>':""}</div>`);
+  const close=d=>{$("a2h").hidden=true;try{localStorage.setItem("co_a2hs",String(Date.now()+d*864e5))}catch(e){}};
+  $("a2hx").onclick=$("a2hn").onclick=()=>close(7);$("a2hok").onclick=()=>close(30);
+  // show once the person is signed in and no sheet is open
+  const t=setInterval(()=>{if(!st.token||!st.veh)return;if(["live","pre","tsheet"].some(i=>$(i)&&$(i).style.display==="flex"))return;clearInterval(t);$("a2h").hidden=false},4000)})();
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 setInterval(refresh,30000);
 boot();refresh();
