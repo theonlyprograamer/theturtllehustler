@@ -58,12 +58,14 @@ $("go").onclick=async()=>{const{k}=calc();$("go").disabled=true;$("msg").classNa
   try{const r=await api("pay",{station:cur.id,kwh:k,vid:st.veh&&st.veh.id});st.bal=r.bal;save();
     ss={s:cur,k,t:r.pre,m:"w",d:0,done:0,sid:r.sid};$("pre").style.display="none";live();ss.iv=setInterval(tick,1000);render()}
   catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
-async function stop(){if(ss.done)return;clearInterval(ss.iv);ss.done=1;$("stopb").disabled=true;
-  try{const r=await api("settle",{sid:ss.sid,kwh:+ss.d.toFixed(3)});apply(r.state);render();
-    $("lt").textContent="Charging complete";$("stopb").textContent="Done";$("lmin").hidden=true;setMini();note("Charging complete","Charged "+r.kwh.toFixed(2)+" kWh for "+inr(r.cost),1);
-    $("lmsg").textContent=`Charged ${r.kwh.toFixed(2)} kWh for ${inr(r.cost)}`+(r.unused>.005?`. ${inr(r.unused)} returned to your wallet.`:".")}
-  catch(e){$("lmsg").className="msg no";$("lmsg").textContent=e.message}
-  $("stopb").disabled=false}
+async function stop(x=ss){if(!x||x.done)return;clearInterval(x.iv);x.done=1;const me=()=>x===ss;if(me())$("stopb").disabled=true;
+  try{const r=await api("settle",{sid:x.sid,kwh:+x.d.toFixed(3)});apply(r.state);render();
+    const msg=`Charged ${r.kwh.toFixed(2)} kWh for ${inr(r.cost)}`+(r.unused>.005?`. ${inr(r.unused)} returned to your wallet.`:".");
+    if(me()){$("lt").textContent="Charging complete";$("stopb").textContent="Done";$("lmin").hidden=true;$("lmore").hidden=true;$("lmsg").textContent=msg}
+    else toast(x.s.n+": "+msg);
+    drawSw();setMini();note("Charging complete","Charged "+r.kwh.toFixed(2)+" kWh for "+inr(r.cost),1,x.sid)}
+  catch(e){if(me()){$("lmsg").className="msg no";$("lmsg").textContent=e.message}else toast(e.message)}
+  if(me())$("stopb").disabled=false}
 
 // Refund requests wait for admin approval
 $("hist").onclick=async e=>{const i=e.target.dataset.i;if(i===undefined)return;const h=st.h[i];if(!h||h.r)return;
@@ -126,30 +128,44 @@ $("stopb").insertAdjacentHTML("beforebegin",'<button class="w" id="lmin">Minimis
 document.body.insertAdjacentHTML("beforeend",'<div id="mini" hidden style="position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));max-width:456px;margin:0 auto;background:var(--ac);color:var(--acx);border-radius:14px;padding:10px 14px;z-index:25;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)"><div class="row"><b id="mt">⚡ Charging</b><span id="mp"></span></div><div class="bar" style="margin:6px 0 0;background:rgba(255,255,255,.35)"><i id="mb" style="background:#fff"></i></div></div>');
 let swr=null;if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").then(r=>swr=r).catch(()=>{});
 function askNotify(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
-function note(t,b,done){try{if(swr&&"Notification" in window&&Notification.permission==="granted")swr.showNotification(t,{body:b,tag:"chargeone-live",renotify:!!done,silent:!done})}catch(e){}}
-function setMini(){$("mini").hidden=!(ss&&!ss.done&&$("live").style.display!=="flex")}
-function paint(){const c=ss.d*ss.s.p*(1+FEE),pc=ss.bat>0?Math.min(100,ss.sp+ss.d/ss.bat*100):null,tx=ss.d.toFixed(1)+" kWh · "+inr(c)+(pc==null?"":" · 🔋"+Math.round(pc)+"%");
-  $("ld").textContent=ss.d.toFixed(2)+" kWh";$("lb").style.width=(ss.d/ss.k*100)+"%";$("lc").textContent=inr(c);
-  $("lbat").textContent=pc==null?"":"🔋 Battery "+Math.round(ss.sp)+"% → "+Math.round(pc)+"%";
-  $("mt").textContent="⚡ "+ss.s.n;$("mp").textContent=tx;$("mb").style.width=(ss.d/ss.k*100)+"%";
-  if(document.hidden&&Date.now()-(ss.ln||0)>15000){ss.ln=Date.now();note("Charging at "+ss.s.n,tx)}}
-function tick(){ss.d=Math.min(ss.k,ss.s.kw/3600*30*(Date.now()-ss.t0)/1000); // demo runs 30x real time; clock-based so it catches up after the phone sleeps
-  paint();if(Date.now()-(ss.lp||0)>5000){ss.lp=Date.now();api("progress",{sid:ss.sid,kwh:+ss.d.toFixed(3)}).catch(()=>{})}
-  if(ss.d>=ss.k)stop()}
-const _live=live;live=function(){_live();$("lmin").hidden=false;setMini()};
+function note(t,b,done,tag){try{if(swr&&"Notification" in window&&Notification.permission==="granted")swr.showNotification(t,{body:b,tag:tag||"chargeone-live",renotify:!!done,silent:!done})}catch(e){}}
+// several vehicles can charge at once: ALL holds every session by id, ss is the one shown on the live screen
+const ALL={};const running=()=>Object.values(ALL).filter(x=>!x.done);
+function setMini(){$("mini").hidden=!(running().length&&$("live").style.display!=="flex")}
+function paint(x=ss){const c=x.d*x.s.p*(1+FEE),pc=x.bat>0?Math.min(100,x.sp+x.d/x.bat*100):null,tx=x.d.toFixed(1)+" kWh · "+inr(c)+(pc==null?"":" · 🔋"+Math.round(pc)+"%");
+  if(x===ss){$("ld").textContent=x.d.toFixed(2)+" kWh";$("lb").style.width=(x.d/x.k*100)+"%";$("lc").textContent=inr(c);
+    $("lbat").textContent=pc==null?"":"🔋 Battery "+Math.round(x.sp)+"% → "+Math.round(pc)+"%"}
+  const r=running();
+  if(r.length>1){$("mt").textContent="⚡ "+r.length+" vehicles charging";$("mp").textContent=inr(r.reduce((t,y)=>t+y.d*y.s.p*(1+FEE),0));$("mb").style.width=(r.reduce((t,y)=>t+y.d/y.k,0)/r.length*100)+"%"}
+  else{$("mt").textContent="⚡ "+x.s.n;$("mp").textContent=tx;$("mb").style.width=(x.d/x.k*100)+"%"}
+  if(document.hidden&&Date.now()-(x.ln||0)>15000){x.ln=Date.now();note("Charging at "+x.s.n,tx,0,x.sid)}}
+function tick(x=ss){x.d=Math.min(x.k,x.s.kw/3600*30*(Date.now()-x.t0)/1000); // demo runs 30x real time; clock-based so it catches up after the phone sleeps
+  paint(x);if(Date.now()-(x.lp||0)>5000){x.lp=Date.now();api("progress",{sid:x.sid,kwh:+x.d.toFixed(3)}).catch(()=>{})}
+  if(x.d>=x.k)stop(x)}
+// switcher on the live screen: one button per running vehicle
+$("ls").insertAdjacentHTML("beforebegin",'<div id="lsw" class="row" style="justify-content:flex-start;gap:6px;margin-bottom:8px" hidden></div>');
+$("lmin").insertAdjacentHTML("afterend",'<button class="w" id="lmore">+ Charge another vehicle</button>');
+function drawSw(){const r=running();$("lsw").hidden=!(r.length>1||(r.length===1&&r[0]!==ss));
+  $("lsw").innerHTML=r.map(x=>`<button data-sw="${esc(x.sid)}"${x===ss?' class="p"':""}>${esc(x.vp||x.s.n)}</button>`).join("")}
+$("lsw").onclick=ev=>{const b=ev.target.closest("[data-sw]");if(!b||!ALL[b.dataset.sw])return;ss=ALL[b.dataset.sw];live()};
+const _live=live;live=function(){_live();$("lmin").hidden=false;$("lmore").hidden=false;drawSw();setMini()};
 $("lmin").onclick=()=>{$("live").style.display="none";setMini()};
-$("mini").onclick=()=>{$("live").style.display="flex";setMini()};
+$("lmore").onclick=()=>{$("live").style.display="none";go("home");setMini()};
+$("stopb").addEventListener("click",()=>setMini());
+$("mini").onclick=()=>{if(!ss||ss.done)ss=running()[0]||ss;live();setMini()};
 $("go").onclick=async()=>{const{k}=calc();askNotify();$("go").disabled=true;$("msg").className="msg";$("msg").textContent="Starting…";
   try{const sp=st.veh&&+st.veh.bat>0?+$("sp").value:0,r=await api("pay",{station:cur.id,kwh:k,vid:st.veh&&st.veh.id,sp});st.bal=r.bal;save();
-    ss={s:cur,k,t:r.pre,m:"w",d:0,done:0,sid:r.sid,t0:r.t0||Date.now(),sp,bat:(st.veh&&+st.veh.bat)||0};
-    $("pre").style.display="none";live();ss.iv=setInterval(tick,1000);render()}
+    if(ALL[r.sid])clearInterval(ALL[r.sid].iv);
+    const x=ss={s:cur,k,t:r.pre,m:"w",d:0,done:0,sid:r.sid,t0:r.t0||Date.now(),sp,bat:(st.veh&&+st.veh.bat)||0,vp:(st.veh&&st.veh.plate)||""};ALL[x.sid]=x;
+    $("pre").style.display="none";live();x.iv=setInterval(()=>tick(x),1000);render()}
   catch(e){$("msg").className="msg no";$("msg").textContent=e.message;$("go").disabled=false}};
 // reopen the live screen if a session is still running (page reloaded, another device, phone slept)
-const _apply=apply;apply=function(s){_apply(s);resume(s.ses)};
-function resume(q){if(!q||(ss&&ss.sid===q.sid))return;
-  ss={s:{id:q.id,n:q.n,net:q.net,kw:q.kw,p:q.p},k:q.k,t:q.pre,m:"w",d:0,done:0,sid:q.sid,t0:q.t0,sp:q.sp,bat:q.bat};
-  live();ss.iv=setInterval(tick,1000);tick()}
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ss&&!ss.done)tick()});
+const _apply=apply;apply=function(s){_apply(s);(s.sesl||[s.ses]).forEach(q=>resume(q))};
+function resume(q){if(!q||ALL[q.sid])return;
+  const x={s:{id:q.id,n:q.n,net:q.net,kw:q.kw,p:q.p},k:q.k,t:q.pre,m:"w",d:0,done:0,sid:q.sid,t0:q.t0,sp:q.sp,bat:q.bat,vp:q.vp||""};ALL[x.sid]=x;
+  if(!ss||ss.done){ss=x;live()}else{drawSw();setMini()}
+  x.iv=setInterval(()=>tick(x),1000);tick(x)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)running().forEach(x=>tick(x))});
 
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 setInterval(refresh,30000);
